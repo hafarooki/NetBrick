@@ -18,6 +18,22 @@ namespace NetBrick.Core.Server
 
         public Dictionary<IPEndPoint, BrickPeer> Peers { get; set; }
 
+        public Dictionary<IPEndPoint, BrickPeer> Clients
+        {
+            get
+            {
+                return (Dictionary<IPEndPoint, BrickPeer>)Peers.Where(p => !p.Value.PeerHandler.IsServer());
+            }
+        }
+
+        public Dictionary<IPEndPoint, BrickPeer> Servers
+        {
+            get
+            {
+                return (Dictionary<IPEndPoint, BrickPeer>)Peers.Where(p => p.Value.PeerHandler.IsServer());
+            }
+        }
+
         protected BrickServer(string appIdentifier, int port, int maxConnections = 10, string address = "127.0.0.1")
         {
             var config = new NetPeerConfiguration(appIdentifier);

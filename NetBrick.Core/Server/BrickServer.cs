@@ -186,6 +186,6 @@ namespace NetBrick.Core.Server
         }
 
         public abstract BasePeerHandler CreateHandler();
-        public abstract void Log(LogLevel warn, string v, params object[] args);
+        public abstract void Log(LogLevel level, string message, params object[] args);
     }
 }

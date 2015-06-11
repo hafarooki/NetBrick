@@ -11,7 +11,6 @@ namespace NetBrick.Chat.Server
     {
         public abstract string MasterAddress { get; }
         public abstract int MasterPort { get; }
-        public abstract List<IPEndPoint> Servers { get; }
 
         public ChatServer(string appIdentifier, int port, List<IPEndPoint> servers, int maxConnections = 10, string address = "127.0.0.1")
             : base(appIdentifier, port, maxConnections, address)

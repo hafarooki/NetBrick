@@ -14,9 +14,8 @@ namespace NetBrick.Core.Server
         private readonly NetServer _server;
         private readonly Dictionary<PacketIdentifier, PacketHandler> _serverHandlers;
 
-        protected abstract List<IPEndPoint> ServerIpList { get; }
-
-        protected BrickServer(string appIdentifier, int port, string address, int maxConnections, bool runOnNewThread = true)
+        protected BrickServer(string appIdentifier, int port, string address, int maxConnections,
+            bool runOnNewThread = true)
         {
             var config = new NetPeerConfiguration(appIdentifier);
 
@@ -37,11 +36,7 @@ namespace NetBrick.Core.Server
             _serverHandlers = new Dictionary<PacketIdentifier, PacketHandler>();
         }
 
-        public void Start()
-        {
-            _server.Start();
-        }
-
+        protected abstract List<IPEndPoint> ServerIpList { get; }
         public Dictionary<IPEndPoint, BrickPeer> Peers { get; set; }
 
         public Dictionary<IPEndPoint, BrickPeer> Clients
@@ -52,6 +47,11 @@ namespace NetBrick.Core.Server
         public Dictionary<IPEndPoint, BrickPeer> Servers
         {
             get { return (Dictionary<IPEndPoint, BrickPeer>) Peers.Where(p => p.Value.IsServer); }
+        }
+
+        public void Start()
+        {
+            _server.Start();
         }
 
         public void Listen()
@@ -73,7 +73,9 @@ namespace NetBrick.Core.Server
 
                         var packet = new Packet(message);
                         PacketHandler handler;
-                        (peer.IsServer ? _serverHandlers : _handlers).TryGetValue(new PacketIdentifier { PacketCode = packet.PacketCode, PacketType = packet.PacketType }, out handler);
+                        (peer.IsServer ? _serverHandlers : _handlers).TryGetValue(
+                            new PacketIdentifier {PacketCode = packet.PacketCode, PacketType = packet.PacketType},
+                            out handler);
                         handler?.Handle(packet, peer);
                     }
                         break;
@@ -160,22 +162,22 @@ namespace NetBrick.Core.Server
 
         public void AddHandler(PacketHandler handler)
         {
-            _handlers.Add(new PacketIdentifier() { PacketCode = handler.Code, PacketType = handler.Type }, handler);
+            _handlers.Add(new PacketIdentifier {PacketCode = handler.Code, PacketType = handler.Type}, handler);
         }
 
         public void RemoveHandler(PacketHandler handler)
         {
-            _handlers.Remove(new PacketIdentifier() { PacketCode = handler.Code, PacketType = handler.Type });
+            _handlers.Remove(new PacketIdentifier {PacketCode = handler.Code, PacketType = handler.Type});
         }
 
         public void AddServerHandler(PacketHandler handler)
         {
-            _serverHandlers.Add(new PacketIdentifier() { PacketCode = handler.Code, PacketType = handler.Type }, handler);
+            _serverHandlers.Add(new PacketIdentifier {PacketCode = handler.Code, PacketType = handler.Type}, handler);
         }
 
         public void RemoveServerHandler(PacketHandler handler)
         {
-            _serverHandlers.Remove(new PacketIdentifier() { PacketCode = handler.Code, PacketType = handler.Type });
+            _serverHandlers.Remove(new PacketIdentifier {PacketCode = handler.Code, PacketType = handler.Type});
         }
 
         public void ConnectToServer(string address, int port)

@@ -18,6 +18,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetBrick.Physics", "NetBrick.Physics\NetBrick.Physics.csproj", "{3CE2B8BE-D508-4522-8C60-99435C0F524D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{0CF60A9A-89BF-4D5A-971D-75C993AC1125}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleChat", "ConsoleChat\ConsoleChat.csproj", "{00CA398D-269C-435C-B0DD-A69E09E9EED7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,8 +48,15 @@ Global
 		{3CE2B8BE-D508-4522-8C60-99435C0F524D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3CE2B8BE-D508-4522-8C60-99435C0F524D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3CE2B8BE-D508-4522-8C60-99435C0F524D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00CA398D-269C-435C-B0DD-A69E09E9EED7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00CA398D-269C-435C-B0DD-A69E09E9EED7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00CA398D-269C-435C-B0DD-A69E09E9EED7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00CA398D-269C-435C-B0DD-A69E09E9EED7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{00CA398D-269C-435C-B0DD-A69E09E9EED7} = {0CF60A9A-89BF-4D5A-971D-75C993AC1125}
 	EndGlobalSection
 EndGlobal

@@ -11,13 +11,11 @@ namespace NetBrick.Login.Server
 {
     public abstract class LoginServer : BrickServer
     {
-        protected LoginServer(string host, int port) : base(TODO, TODO, TODO, TODO)
+        protected LoginServer(ConnectionMultiplexer multiplexer, string appIdentifier, int port, string address, int maxConnections, bool runOnNewThread = true) : base(appIdentifier, port, address, maxConnections, runOnNewThread)
         {
-            ConnectionMultiplexer = ConnectionMultiplexer.Connect(host + ":" + port);
-            Database = ConnectionMultiplexer.GetDatabase();
+            Database = multiplexer.GetDatabase();
         }
 
-        internal ConnectionMultiplexer ConnectionMultiplexer { get; }
         internal IDatabase Database { get; }
 
         public void SetData(string key, object value)

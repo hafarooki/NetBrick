@@ -2,8 +2,8 @@
 {
     public enum FrameworkParameterCode : byte
     {
-        Channel = 0,
-        Message = 1,
-        To = 2
+        Message = 0,
+        To = 1,
+        From = 2
     }
 }

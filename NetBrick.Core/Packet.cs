@@ -9,7 +9,7 @@ namespace NetBrick.Core
         public short PacketCode { get; set; }
         public Dictionary<byte, object> Parameters { get; }
 
-        public Packet(NetBuffer buffer)
+        internal Packet(NetBuffer buffer)
         {
             PacketType = (PacketType)buffer.ReadByte();
             PacketCode = buffer.ReadInt16();

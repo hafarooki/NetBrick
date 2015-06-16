@@ -10,29 +10,31 @@ namespace NetBrick.Core.Server
 {
     public abstract class BrickServer
     {
-        private readonly List<PacketHandler> _handlers;
+        private readonly Dictionary<PacketIdentifier, PacketHandler> _handlers;
         private readonly NetServer _server;
-        private readonly List<PacketHandler> _serverHandlers;
+        private readonly Dictionary<PacketIdentifier, PacketHandler> _serverHandlers;
 
-        protected BrickServer(bool runOnNewThread = true)
+        protected abstract List<IPEndPoint> ServerIpList { get; }
+
+        protected BrickServer(string appIdentifier, int port, string address, int maxConnections, bool runOnNewThread = true)
         {
-            var config = new NetPeerConfiguration(AppIdentifier);
+            var config = new NetPeerConfiguration(appIdentifier);
 
             config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
             config.EnableMessageType(NetIncomingMessageType.Data);
             config.EnableMessageType(NetIncomingMessageType.StatusChanged);
 
-            config.Port = Port;
-            config.LocalAddress = IPAddress.Parse(Address);
-            config.MaximumConnections = MaxConnections;
+            config.Port = port;
+            config.LocalAddress = IPAddress.Parse(address);
+            config.MaximumConnections = maxConnections;
 
             _server = new NetServer(config);
 
             if (runOnNewThread)
-                new Thread(() => Listen()).Start();
+                new Thread(Listen).Start();
 
-            _handlers = new List<PacketHandler>();
-            _serverHandlers = new List<PacketHandler>();
+            _handlers = new Dictionary<PacketIdentifier, PacketHandler>();
+            _serverHandlers = new Dictionary<PacketIdentifier, PacketHandler>();
 
             _server.Start();
 
@@ -50,12 +52,6 @@ namespace NetBrick.Core.Server
         {
             get { return (Dictionary<IPEndPoint, BrickPeer>) Peers.Where(p => p.Value.IsServer); }
         }
-
-        protected abstract string AppIdentifier { get; }
-        protected abstract int Port { get; }
-        protected abstract string Address { get; }
-        protected abstract int MaxConnections { get; }
-        protected abstract List<IPEndPoint> ServerIPList { get; }
 
         public void Listen()
         {
@@ -75,15 +71,9 @@ namespace NetBrick.Core.Server
                         if (peer == null) throw new Exception("Nonexistant peer sent message!");
 
                         var packet = new Packet(message);
-                        var handlers = from h in (peer.IsServer ? _serverHandlers : _handlers)
-                            where h.Code == packet.PacketCode && h.Type == packet.PacketType
-                            select h;
-
-                        foreach (var handler in handlers)
-                        {
-                            handler.Handle(packet, peer);
+                        PacketHandler handler;
+                        (peer.IsServer ? _serverHandlers : _handlers).TryGetValue(new PacketIdentifier() { PacketCode = packet.PacketCode, PacketType = packet.PacketType }, out handler);
                         }
-                    }
                         break;
                     case NetIncomingMessageType.ConnectionApproval:
                         message.SenderConnection.Approve();
@@ -98,7 +88,7 @@ namespace NetBrick.Core.Server
                                 var peer = new BrickPeer();
 
                                 peer.Connection = message.SenderConnection;
-                                peer.IsServer = ServerIPList.Contains(message.SenderEndPoint);
+                                peer.IsServer = ServerIpList.Contains(message.SenderEndPoint);
 
                                 var handler = CreateHandler();
 
@@ -171,22 +161,22 @@ namespace NetBrick.Core.Server
 
         public void AddHandler(PacketHandler handler)
         {
-            _handlers.Add(handler);
+            _handlers.Add(new PacketIdentifier() { PacketCode = handler.Code, PacketType = handler.Type }, handler);
         }
 
         public void RemoveHandler(PacketHandler handler)
         {
-            _handlers.Remove(handler);
+            _handlers.Remove(new PacketIdentifier() { PacketCode = handler.Code, PacketType = handler.Type });
         }
 
         public void AddServerHandler(PacketHandler handler)
         {
-            _serverHandlers.Add(handler);
+            _serverHandlers.Add(new PacketIdentifier() { PacketCode = handler.Code, PacketType = handler.Type }, handler);
         }
 
         public void RemoveServerHandler(PacketHandler handler)
         {
-            _serverHandlers.Remove(handler);
+            _serverHandlers.Remove(new PacketIdentifier() { PacketCode = handler.Code, PacketType = handler.Type });
         }
 
         public void ConnectToServer(string address, int port)

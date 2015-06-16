@@ -57,6 +57,7 @@
     <Compile Include="Server\BrickServer.cs" />
     <Compile Include="Server\Handlers\PacketHandler.cs" />
     <Compile Include="Client\Handlers\PacketHandler.cs" />
+    <Compile Include="Server\PacketIdentifier.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">

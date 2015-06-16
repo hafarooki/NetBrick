@@ -4,7 +4,7 @@ namespace NetBrick.Physics.Server
 {
     public abstract class PhysicsServer : BrickServer
     {
-        protected PhysicsServer() : base(false)
+        protected PhysicsServer() : base(TODO, TODO, TODO, TODO, false)
         {
         }
     }

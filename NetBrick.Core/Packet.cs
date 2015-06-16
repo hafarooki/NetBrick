@@ -9,7 +9,7 @@ namespace NetBrick.Core
         {
             PacketType = (PacketType) buffer.ReadByte();
             PacketCode = buffer.ReadInt16();
-            var amount = buffer.ReadByte();
+            var amount = buffer.ReadInt32();
             buffer.SkipPadBits();
             var parameters = buffer.ReadBytes(amount).FromBytes<List<PacketParameter>>(true);
             Parameters = new Dictionary<byte, object>();

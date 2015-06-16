@@ -11,7 +11,7 @@ namespace NetBrick.Login.Server
 {
     public abstract class LoginServer : BrickServer
     {
-        protected LoginServer(string host, int port)
+        protected LoginServer(string host, int port) : base(TODO, TODO, TODO, TODO)
         {
             ConnectionMultiplexer = ConnectionMultiplexer.Connect(host + ":" + port);
             Database = ConnectionMultiplexer.GetDatabase();

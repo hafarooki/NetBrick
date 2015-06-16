@@ -22,7 +22,7 @@ namespace NetBrick.Core.Server
         {
             get
             {
-                return (Dictionary<IPEndPoint, BrickPeer>)Peers.Where(p => !p.Value.PeerHandler.IsServer());
+                return (Dictionary<IPEndPoint, BrickPeer>)Peers.Where(p => !p.Value.IsServer);
             }
         }
 
@@ -30,33 +30,42 @@ namespace NetBrick.Core.Server
         {
             get
             {
-                return (Dictionary<IPEndPoint, BrickPeer>)Peers.Where(p => p.Value.PeerHandler.IsServer());
+                return (Dictionary<IPEndPoint, BrickPeer>)Peers.Where(p => p.Value.IsServer);
             }
         }
 
-        protected BrickServer(string appIdentifier, int port, int maxConnections = 10, string address = "127.0.0.1")
+        protected abstract string AppIdentifier { get; }
+        protected abstract int Port { get; }
+        protected abstract string Address { get; }
+        protected abstract int MaxConnections { get; }
+        protected abstract List<IPEndPoint> ServerIPList { get; }
+
+        protected BrickServer(bool runOnNewThread = true)
         {
-            var config = new NetPeerConfiguration(appIdentifier);
+            var config = new NetPeerConfiguration(AppIdentifier);
 
             config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
             config.EnableMessageType(NetIncomingMessageType.Data);
             config.EnableMessageType(NetIncomingMessageType.StatusChanged);
 
-            config.Port = port;
-            config.LocalAddress = IPAddress.Parse(address);
-            config.MaximumConnections = maxConnections;
+            config.Port = Port;
+            config.LocalAddress = IPAddress.Parse(Address);
+            config.MaximumConnections = MaxConnections;
 
             _server = new NetServer(config);
 
-            new Thread(() => Listen()).Start();
+            if (runOnNewThread)
+                new Thread(() => Listen()).Start();
 
             _handlers = new List<PacketHandler>();
             _serverHandlers = new List<PacketHandler>();
 
             _server.Start();
+
+            OnServerStarted();
         }
 
-        private void Listen()
+        public void Listen()
         {
             while (!Environment.HasShutdownStarted)
             {
@@ -74,7 +83,7 @@ namespace NetBrick.Core.Server
                             if (peer == null) throw new Exception("Nonexistant peer sent message!");
 
                             var packet = new Packet(message);
-                            var handlers = from h in (peer.PeerHandler.IsServer() ? _serverHandlers : _handlers) where h.Code == packet.PacketCode && h.Type == packet.PacketType select h;
+                            var handlers = from h in (peer.IsServer ? _serverHandlers : _handlers) where h.Code == packet.PacketCode && h.Type == packet.PacketType select h;
 
                             foreach (var handler in handlers)
                             {
@@ -93,8 +102,12 @@ namespace NetBrick.Core.Server
                             case NetConnectionStatus.Connected:
                                 {
                                     var peer = new BrickPeer();
-                                    var handler = CreateHandler();
+
                                     peer.Connection = message.SenderConnection;
+                                    peer.IsServer = ServerIPList.Contains(message.SenderEndPoint);
+
+                                    var handler = CreateHandler();
+
                                     peer.PeerHandler = handler;
                                     handler.Peer = peer;
 
@@ -187,5 +200,6 @@ namespace NetBrick.Core.Server
 
         public abstract BasePeerHandler CreateHandler();
         public abstract void Log(LogLevel level, string message, params object[] args);
+        protected abstract void OnServerStarted();
     }
 }

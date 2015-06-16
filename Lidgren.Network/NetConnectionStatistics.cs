@@ -20,84 +20,97 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 // Uncomment the line below to get statistics in RELEASE builds
 //#define USE_RELEASE_STATISTICS
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
+using System.Text;
 
 namespace Lidgren.Network
 {
-	internal enum MessageResendReason
-	{
-		Delay,
-		HoleInSequence
-	}
+    internal enum MessageResendReason
+    {
+        Delay,
+        HoleInSequence
+    }
 
-	/// <summary>
-	/// Statistics for a NetConnection instance
-	/// </summary>
-	public sealed class NetConnectionStatistics
-	{
-		private readonly NetConnection m_connection;
+    /// <summary>
+    ///     Statistics for a NetConnection instance
+    /// </summary>
+    public sealed class NetConnectionStatistics
+    {
+        private readonly NetConnection m_connection;
 
-		internal long m_sentPackets;
-		internal long m_receivedPackets;
+        internal long m_sentPackets;
+        internal long m_receivedPackets;
 
-		internal long m_sentMessages;
-		internal long m_receivedMessages;
-		internal long m_receivedFragments;
+        internal long m_sentMessages;
+        internal long m_receivedMessages;
+        internal long m_receivedFragments;
 
-		internal long m_sentBytes;
-		internal long m_receivedBytes;
+        internal long m_sentBytes;
+        internal long m_receivedBytes;
 
-		internal long m_resentMessagesDueToDelay;
-		internal long m_resentMessagesDueToHole;
+        internal long m_resentMessagesDueToDelay;
+        internal long m_resentMessagesDueToHole;
 
-		internal NetConnectionStatistics(NetConnection conn)
-		{
-			m_connection = conn;
-			Reset();
-		}
+        internal NetConnectionStatistics(NetConnection conn)
+        {
+            m_connection = conn;
+            Reset();
+        }
 
-		internal void Reset()
-		{
-			m_sentPackets = 0;
-			m_receivedPackets = 0;
-			m_sentMessages = 0;
-			m_receivedMessages = 0;
-			m_receivedFragments = 0;
-			m_sentBytes = 0;
-			m_receivedBytes = 0;
-			m_resentMessagesDueToDelay = 0;
-			m_resentMessagesDueToHole = 0;
-		}
+        internal void Reset()
+        {
+            m_sentPackets = 0;
+            m_receivedPackets = 0;
+            m_sentMessages = 0;
+            m_receivedMessages = 0;
+            m_receivedFragments = 0;
+            m_sentBytes = 0;
+            m_receivedBytes = 0;
+            m_resentMessagesDueToDelay = 0;
+            m_resentMessagesDueToHole = 0;
+        }
 
-		/// <summary>
-		/// Gets the number of sent packets for this connection
-		/// </summary>
-		public long SentPackets { get { return m_sentPackets; } }
+        /// <summary>
+        ///     Gets the number of sent packets for this connection
+        /// </summary>
+        public long SentPackets
+        {
+            get { return m_sentPackets; }
+        }
 
-		/// <summary>
-		/// Gets the number of received packets for this connection
-		/// </summary>
-		public long ReceivedPackets { get { return m_receivedPackets; } }
+        /// <summary>
+        ///     Gets the number of received packets for this connection
+        /// </summary>
+        public long ReceivedPackets
+        {
+            get { return m_receivedPackets; }
+        }
 
-		/// <summary>
-		/// Gets the number of sent bytes for this connection
-		/// </summary>
-		public long SentBytes { get { return m_sentBytes; } }
+        /// <summary>
+        ///     Gets the number of sent bytes for this connection
+        /// </summary>
+        public long SentBytes
+        {
+            get { return m_sentBytes; }
+        }
 
-		/// <summary>
-		/// Gets the number of received bytes for this connection
-		/// </summary>
-		public long ReceivedBytes { get { return m_receivedBytes; } }
+        /// <summary>
+        ///     Gets the number of received bytes for this connection
+        /// </summary>
+        public long ReceivedBytes
+        {
+            get { return m_receivedBytes; }
+        }
 
-		/// <summary>
-		/// Gets the number of resent reliable messages for this connection
-		/// </summary>
-		public long ResentMessages { get { return m_resentMessagesDueToHole + m_resentMessagesDueToDelay; } }
+        /// <summary>
+        ///     Gets the number of resent reliable messages for this connection
+        /// </summary>
+        public long ResentMessages
+        {
+            get { return m_resentMessagesDueToHole + m_resentMessagesDueToDelay; }
+        }
 
-		// public double LastSendRespondedTo { get { return m_connection.m_lastSendRespondedTo; } }
+        // public double LastSendRespondedTo { get { return m_connection.m_lastSendRespondedTo; } }
 
 #if USE_RELEASE_STATISTICS
 		internal void PacketSent(int numBytes, int numMessages)
@@ -108,14 +121,14 @@ namespace Lidgren.Network
 			m_sentMessages += numMessages;
 		}
 #else
-		[Conditional("DEBUG")]
-		internal void PacketSent(int numBytes, int numMessages)
-		{
-			NetException.Assert(numBytes > 0 && numMessages > 0);
-			m_sentPackets++;
-			m_sentBytes += numBytes;
-			m_sentMessages += numMessages;
-		}
+        [Conditional("DEBUG")]
+        internal void PacketSent(int numBytes, int numMessages)
+        {
+            NetException.Assert(numBytes > 0 && numMessages > 0);
+            m_sentPackets++;
+            m_sentBytes += numBytes;
+            m_sentMessages += numMessages;
+        }
 #endif
 
 #if USE_RELEASE_STATISTICS
@@ -127,15 +140,15 @@ namespace Lidgren.Network
 			m_receivedMessages += numMessages;
 		}
 #else
-		[Conditional("DEBUG")]
-		internal void PacketReceived(int numBytes, int numMessages, int numFragments)
-		{
-			NetException.Assert(numBytes > 0 && numMessages > 0);
-			m_receivedPackets++;
-			m_receivedBytes += numBytes;
-			m_receivedMessages += numMessages;
-			m_receivedFragments += numFragments;
-		}
+        [Conditional("DEBUG")]
+        internal void PacketReceived(int numBytes, int numMessages, int numFragments)
+        {
+            NetException.Assert(numBytes > 0 && numMessages > 0);
+            m_receivedPackets++;
+            m_receivedBytes += numBytes;
+            m_receivedMessages += numMessages;
+            m_receivedFragments += numFragments;
+        }
 #endif
 
 #if USE_RELEASE_STATISTICS
@@ -147,66 +160,68 @@ namespace Lidgren.Network
 				m_resentMessagesDueToHole++;
 		}
 #else
-		[Conditional("DEBUG")]
-		internal void MessageResent(MessageResendReason reason)
-		{
-			if (reason == MessageResendReason.Delay)
-				m_resentMessagesDueToDelay++;
-			else
-				m_resentMessagesDueToHole++;
-		}
+        [Conditional("DEBUG")]
+        internal void MessageResent(MessageResendReason reason)
+        {
+            if (reason == MessageResendReason.Delay)
+                m_resentMessagesDueToDelay++;
+            else
+                m_resentMessagesDueToHole++;
+        }
 #endif
 
-		/// <summary>
-		/// Returns a string that represents this object
-		/// </summary>
-		public override string ToString()
-		{
-			StringBuilder bdr = new StringBuilder();
-			//bdr.AppendLine("Average roundtrip time: " + NetTime.ToReadable(m_connection.m_averageRoundtripTime));
-			bdr.AppendLine("Current MTU: " + m_connection.m_currentMTU);
-			bdr.AppendLine("Sent " + m_sentBytes + " bytes in " + m_sentMessages + " messages in " + m_sentPackets + " packets");
-			bdr.AppendLine("Received " + m_receivedBytes + " bytes in " + m_receivedMessages + " messages (of which " + m_receivedFragments + " fragments) in " + m_receivedPackets + " packets");
+        /// <summary>
+        ///     Returns a string that represents this object
+        /// </summary>
+        public override string ToString()
+        {
+            var bdr = new StringBuilder();
+            //bdr.AppendLine("Average roundtrip time: " + NetTime.ToReadable(m_connection.m_averageRoundtripTime));
+            bdr.AppendLine("Current MTU: " + m_connection.m_currentMTU);
+            bdr.AppendLine("Sent " + m_sentBytes + " bytes in " + m_sentMessages + " messages in " + m_sentPackets +
+                           " packets");
+            bdr.AppendLine("Received " + m_receivedBytes + " bytes in " + m_receivedMessages + " messages (of which " +
+                           m_receivedFragments + " fragments) in " + m_receivedPackets + " packets");
 
-			if (m_resentMessagesDueToDelay > 0)
-				bdr.AppendLine("Resent messages (delay): " + m_resentMessagesDueToDelay);
-			if (m_resentMessagesDueToDelay > 0)
-				bdr.AppendLine("Resent messages (holes): " + m_resentMessagesDueToHole);
+            if (m_resentMessagesDueToDelay > 0)
+                bdr.AppendLine("Resent messages (delay): " + m_resentMessagesDueToDelay);
+            if (m_resentMessagesDueToDelay > 0)
+                bdr.AppendLine("Resent messages (holes): " + m_resentMessagesDueToHole);
 
-			int numUnsent = 0;
-			int numStored = 0;
-			foreach (NetSenderChannelBase sendChan in m_connection.m_sendChannels)
-			{
-				if (sendChan == null)
-					continue;
-				numUnsent += sendChan.QueuedSendsCount;
+            var numUnsent = 0;
+            var numStored = 0;
+            foreach (var sendChan in m_connection.m_sendChannels)
+            {
+                if (sendChan == null)
+                    continue;
+                numUnsent += sendChan.QueuedSendsCount;
 
-				var relSendChan = sendChan as NetReliableSenderChannel;
-				if (relSendChan != null)
-				{
-					for (int i = 0; i < relSendChan.m_storedMessages.Length; i++)
-						if (relSendChan.m_storedMessages[i].Message != null)
-							numStored++;
-				}
-			}
+                var relSendChan = sendChan as NetReliableSenderChannel;
+                if (relSendChan != null)
+                {
+                    for (var i = 0; i < relSendChan.m_storedMessages.Length; i++)
+                        if (relSendChan.m_storedMessages[i].Message != null)
+                            numStored++;
+                }
+            }
 
-			int numWithheld = 0;
-			foreach (NetReceiverChannelBase recChan in m_connection.m_receiveChannels)
-			{
-				var relRecChan = recChan as NetReliableOrderedReceiver;
-				if (relRecChan != null)
-				{
-					for (int i = 0; i < relRecChan.m_withheldMessages.Length; i++)
-						if (relRecChan.m_withheldMessages[i] != null)
-							numWithheld++;
-				}
-			}
+            var numWithheld = 0;
+            foreach (var recChan in m_connection.m_receiveChannels)
+            {
+                var relRecChan = recChan as NetReliableOrderedReceiver;
+                if (relRecChan != null)
+                {
+                    for (var i = 0; i < relRecChan.m_withheldMessages.Length; i++)
+                        if (relRecChan.m_withheldMessages[i] != null)
+                            numWithheld++;
+                }
+            }
 
-			bdr.AppendLine("Unsent messages: " + numUnsent);
-			bdr.AppendLine("Stored messages: " + numStored);
-			bdr.AppendLine("Withheld messages: " + numWithheld);
+            bdr.AppendLine("Unsent messages: " + numUnsent);
+            bdr.AppendLine("Stored messages: " + numStored);
+            bdr.AppendLine("Withheld messages: " + numWithheld);
 
-			return bdr.ToString();
-		}
-	}
+            return bdr.ToString();
+        }
+    }
 }

@@ -16,83 +16,85 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRA
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-using System;
+
 using System.Reflection;
 
 namespace Lidgren.Network
 {
-	public partial class NetBuffer
-	{
-		/// <summary>
-		/// Writes all public and private declared instance fields of the object in alphabetical order using reflection
-		/// </summary>
-		public void WriteAllFields(object ob)
-		{
-			WriteAllFields(ob, BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-		}
+    public partial class NetBuffer
+    {
+        /// <summary>
+        ///     Writes all public and private declared instance fields of the object in alphabetical order using reflection
+        /// </summary>
+        public void WriteAllFields(object ob)
+        {
+            WriteAllFields(ob,
+                BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+        }
 
-		/// <summary>
-		/// Writes all fields with specified binding in alphabetical order using reflection
-		/// </summary>
-		public void WriteAllFields(object ob, BindingFlags flags)
-		{
-			if (ob == null)
-				return;
-			Type tp = ob.GetType();
+        /// <summary>
+        ///     Writes all fields with specified binding in alphabetical order using reflection
+        /// </summary>
+        public void WriteAllFields(object ob, BindingFlags flags)
+        {
+            if (ob == null)
+                return;
+            var tp = ob.GetType();
 
-			FieldInfo[] fields = tp.GetFields(flags);
-			NetUtility.SortMembersList(fields);
+            var fields = tp.GetFields(flags);
+            NetUtility.SortMembersList(fields);
 
-			foreach (FieldInfo fi in fields)
-			{
-				object value = fi.GetValue(ob);
+            foreach (var fi in fields)
+            {
+                var value = fi.GetValue(ob);
 
-				// find the appropriate Write method
-				MethodInfo writeMethod;
-				if (s_writeMethods.TryGetValue(fi.FieldType, out writeMethod))
-					writeMethod.Invoke(this, new object[] { value });
-				else
-					throw new NetException("Failed to find write method for type " + fi.FieldType);
-			}
-		}
+                // find the appropriate Write method
+                MethodInfo writeMethod;
+                if (s_writeMethods.TryGetValue(fi.FieldType, out writeMethod))
+                    writeMethod.Invoke(this, new[] {value});
+                else
+                    throw new NetException("Failed to find write method for type " + fi.FieldType);
+            }
+        }
 
-		/// <summary>
-		/// Writes all public and private declared instance properties of the object in alphabetical order using reflection
-		/// </summary>
-		public void WriteAllProperties(object ob)
-		{
-			WriteAllProperties(ob, BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-		}
+        /// <summary>
+        ///     Writes all public and private declared instance properties of the object in alphabetical order using reflection
+        /// </summary>
+        public void WriteAllProperties(object ob)
+        {
+            WriteAllProperties(ob,
+                BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+        }
 
-		/// <summary>
-		/// Writes all properties with specified binding in alphabetical order using reflection
-		/// </summary>
-		public void WriteAllProperties(object ob, BindingFlags flags)
-		{
-			if (ob == null)
-				return;
-			Type tp = ob.GetType();
+        /// <summary>
+        ///     Writes all properties with specified binding in alphabetical order using reflection
+        /// </summary>
+        public void WriteAllProperties(object ob, BindingFlags flags)
+        {
+            if (ob == null)
+                return;
+            var tp = ob.GetType();
 
-			PropertyInfo[] fields = tp.GetProperties(flags);
-			NetUtility.SortMembersList(fields);
+            var fields = tp.GetProperties(flags);
+            NetUtility.SortMembersList(fields);
 
-			foreach (PropertyInfo fi in fields)
-			{
+            foreach (var fi in fields)
+            {
 #if UNITY_WEBPLAYER || UNITY_4_5
-				MethodInfo getMethod = fi.GetGetMethod();
+                var getMethod = fi.GetGetMethod();
 #else
 				MethodInfo getMethod = fi.GetMethod;
 #endif
-				if (getMethod != null)
-				{
-					object value = getMethod.Invoke(ob, null);
+                if (getMethod != null)
+                {
+                    var value = getMethod.Invoke(ob, null);
 
-					// find the appropriate Write method
-					MethodInfo writeMethod;
-					if (s_writeMethods.TryGetValue(fi.PropertyType, out writeMethod))
-						writeMethod.Invoke(this, new object[] { value });
-				}
-			}
-		}
-	}
+                    // find the appropriate Write method
+                    MethodInfo writeMethod;
+                    if (s_writeMethods.TryGetValue(fi.PropertyType, out writeMethod))
+                        writeMethod.Invoke(this, new[] {value});
+                }
+            }
+        }
+    }
 }

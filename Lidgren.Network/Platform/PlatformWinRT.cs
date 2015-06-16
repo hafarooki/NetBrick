@@ -1,4 +1,5 @@
-﻿#if WINDOWS_RUNTIME
+﻿
+#if WINDOWS_RUNTIME
 //
 //
 //

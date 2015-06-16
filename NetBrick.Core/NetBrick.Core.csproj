@@ -46,6 +46,7 @@
     <Compile Include="Client\BrickClient.cs" />
     <Compile Include="Codes\FrameworkEventCode.cs" />
     <Compile Include="Codes\FrameworkOperationCode.cs" />
+    <Compile Include="Codes\FrameworkParameterCode.cs" />
     <Compile Include="LogLevel.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Packet.cs" />

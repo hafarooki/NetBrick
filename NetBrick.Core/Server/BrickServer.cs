@@ -1,44 +1,18 @@
-﻿using Lidgren.Network;
-using System.Net;
-using System;
-using System.Linq;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Threading;
+using Lidgren.Network;
 using NetBrick.Core.Server.Handlers;
 
 namespace NetBrick.Core.Server
 {
     public abstract class BrickServer
     {
-        private NetServer _server;
-
-        private List<PacketHandler> _handlers;
-
-        private List<PacketHandler> _serverHandlers;
-
-        public Dictionary<IPEndPoint, BrickPeer> Peers { get; set; }
-
-        public Dictionary<IPEndPoint, BrickPeer> Clients
-        {
-            get
-            {
-                return (Dictionary<IPEndPoint, BrickPeer>)Peers.Where(p => !p.Value.IsServer);
-            }
-        }
-
-        public Dictionary<IPEndPoint, BrickPeer> Servers
-        {
-            get
-            {
-                return (Dictionary<IPEndPoint, BrickPeer>)Peers.Where(p => p.Value.IsServer);
-            }
-        }
-
-        protected abstract string AppIdentifier { get; }
-        protected abstract int Port { get; }
-        protected abstract string Address { get; }
-        protected abstract int MaxConnections { get; }
-        protected abstract List<IPEndPoint> ServerIPList { get; }
+        private readonly List<PacketHandler> _handlers;
+        private readonly NetServer _server;
+        private readonly List<PacketHandler> _serverHandlers;
 
         protected BrickServer(bool runOnNewThread = true)
         {
@@ -65,6 +39,24 @@ namespace NetBrick.Core.Server
             OnServerStarted();
         }
 
+        public Dictionary<IPEndPoint, BrickPeer> Peers { get; set; }
+
+        public Dictionary<IPEndPoint, BrickPeer> Clients
+        {
+            get { return (Dictionary<IPEndPoint, BrickPeer>) Peers.Where(p => !p.Value.IsServer); }
+        }
+
+        public Dictionary<IPEndPoint, BrickPeer> Servers
+        {
+            get { return (Dictionary<IPEndPoint, BrickPeer>) Peers.Where(p => p.Value.IsServer); }
+        }
+
+        protected abstract string AppIdentifier { get; }
+        protected abstract int Port { get; }
+        protected abstract string Address { get; }
+        protected abstract int MaxConnections { get; }
+        protected abstract List<IPEndPoint> ServerIPList { get; }
+
         public void Listen()
         {
             while (!Environment.HasShutdownStarted)
@@ -76,54 +68,56 @@ namespace NetBrick.Core.Server
                 switch (message.MessageType)
                 {
                     case NetIncomingMessageType.Data:
+                    {
+                        BrickPeer peer;
+                        Peers.TryGetValue(message.SenderEndPoint, out peer);
+
+                        if (peer == null) throw new Exception("Nonexistant peer sent message!");
+
+                        var packet = new Packet(message);
+                        var handlers = from h in (peer.IsServer ? _serverHandlers : _handlers)
+                            where h.Code == packet.PacketCode && h.Type == packet.PacketType
+                            select h;
+
+                        foreach (var handler in handlers)
                         {
-                            BrickPeer peer;
-                            Peers.TryGetValue(message.SenderEndPoint, out peer);
-
-                            if (peer == null) throw new Exception("Nonexistant peer sent message!");
-
-                            var packet = new Packet(message);
-                            var handlers = from h in (peer.IsServer ? _serverHandlers : _handlers) where h.Code == packet.PacketCode && h.Type == packet.PacketType select h;
-
-                            foreach (var handler in handlers)
-                            {
-                                handler.Handle(packet, peer);
-                            }
+                            handler.Handle(packet, peer);
                         }
+                    }
                         break;
                     case NetIncomingMessageType.ConnectionApproval:
                         message.SenderConnection.Approve();
                         break;
                     case NetIncomingMessageType.StatusChanged:
-                        var status = (NetConnectionStatus)message.ReadByte();
+                        var status = (NetConnectionStatus) message.ReadByte();
                         Log(LogLevel.Info, "Status Changed for {0}. New Status: {1}", message.SenderEndPoint, status);
                         switch (status)
                         {
                             case NetConnectionStatus.Connected:
-                                {
-                                    var peer = new BrickPeer();
+                            {
+                                var peer = new BrickPeer();
 
-                                    peer.Connection = message.SenderConnection;
-                                    peer.IsServer = ServerIPList.Contains(message.SenderEndPoint);
+                                peer.Connection = message.SenderConnection;
+                                peer.IsServer = ServerIPList.Contains(message.SenderEndPoint);
 
-                                    var handler = CreateHandler();
+                                var handler = CreateHandler();
 
-                                    peer.PeerHandler = handler;
-                                    handler.Peer = peer;
+                                peer.PeerHandler = handler;
+                                handler.Peer = peer;
 
-                                    Peers.Add(peer.Connection.RemoteEndPoint, peer);
-                                    handler.OnConnect(message.SenderEndPoint);
-                                }
+                                Peers.Add(peer.Connection.RemoteEndPoint, peer);
+                                handler.OnConnect(message.SenderEndPoint);
+                            }
                                 break;
                             case NetConnectionStatus.Disconnected:
-                                {
-                                    BrickPeer peer;
-                                    Peers.TryGetValue(message.SenderEndPoint, out peer);
+                            {
+                                BrickPeer peer;
+                                Peers.TryGetValue(message.SenderEndPoint, out peer);
 
-                                    if (peer == null) throw new Exception("Nonexistant peer disconnected!");
+                                if (peer == null) throw new Exception("Nonexistant peer disconnected!");
 
-                                    peer.PeerHandler.OnDisconnect(message.ReadString());
-                                }
+                                peer.PeerHandler.OnDisconnect(message.ReadString());
+                            }
                                 break;
                         }
                         break;
@@ -144,14 +138,16 @@ namespace NetBrick.Core.Server
             }
         }
 
-        public void Send(Packet packet, BrickPeer recipient, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered, int sequenceChannel = 0)
+        public void Send(Packet packet, BrickPeer recipient,
+            NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered, int sequenceChannel = 0)
         {
             var message = _server.CreateMessage();
             message.Write(packet.ToMessage());
             _server.SendMessage(message, recipient.Connection, method, sequenceChannel);
         }
 
-        public void Send(Packet packet, IEnumerable<BrickPeer> recipients, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered, int sequenceChannel = 0)
+        public void Send(Packet packet, IEnumerable<BrickPeer> recipients,
+            NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered, int sequenceChannel = 0)
         {
             var message = _server.CreateMessage();
             message.Write(packet.ToMessage());

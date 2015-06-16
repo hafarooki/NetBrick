@@ -1,17 +1,13 @@
-﻿using Lidgren.Network;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Lidgren.Network;
 
 namespace NetBrick.Core
 {
     public class Packet
     {
-        public PacketType PacketType { get; set; }
-        public short PacketCode { get; set; }
-        public Dictionary<byte, object> Parameters { get; }
-
         internal Packet(NetBuffer buffer)
         {
-            PacketType = (PacketType)buffer.ReadByte();
+            PacketType = (PacketType) buffer.ReadByte();
             PacketCode = buffer.ReadInt16();
             var amount = buffer.ReadByte();
             buffer.SkipPadBits();
@@ -32,20 +28,24 @@ namespace NetBrick.Core
             PacketCode = packetCode;
         }
 
+        public PacketType PacketType { get; set; }
+        public short PacketCode { get; set; }
+        public Dictionary<byte, object> Parameters { get; }
+
         internal NetBuffer ToMessage()
         {
             var buffer = new NetBuffer();
 
             var parameters = new List<PacketParameter>();
 
-            foreach(var key in Parameters.Keys)
+            foreach (var key in Parameters.Keys)
             {
                 parameters.Add(new PacketParameter(key, Parameters[key]));
             }
 
             var bytes = parameters.ToBytes();
 
-            buffer.Write((byte)PacketType);
+            buffer.Write((byte) PacketType);
             buffer.Write(PacketCode);
             buffer.Write(bytes.Length);
             buffer.WritePadBits();
@@ -56,14 +56,14 @@ namespace NetBrick.Core
 
         private class PacketParameter
         {
-            public byte Code { get; set; }
-            public object Data { get; set; }
-
             public PacketParameter(byte code, object data)
             {
                 Code = code;
                 Data = data;
             }
+
+            public byte Code { get; }
+            public object Data { get; }
         }
     }
 }

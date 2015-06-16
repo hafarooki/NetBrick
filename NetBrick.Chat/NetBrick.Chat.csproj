@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NetBrick.Chat</RootNamespace>
     <AssemblyName>NetBrick.Chat</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -42,8 +43,6 @@
   <ItemGroup>
     <Compile Include="Packets\Requests\ChatRequest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Server\Channel.cs" />
-    <Compile Include="Server\ChatManager.cs" />
     <Compile Include="Server\ChatServer.cs" />
     <Compile Include="Server\Handlers\Requests\ChatRequestHandler.cs" />
   </ItemGroup>

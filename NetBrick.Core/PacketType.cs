@@ -1,9 +1,9 @@
-﻿using System;
-
-namespace NetBrick.Core
+﻿namespace NetBrick.Core
 {
     public enum PacketType : byte
     {
-        Request, Response, Event
+        Request,
+        Response,
+        Event
     }
 }

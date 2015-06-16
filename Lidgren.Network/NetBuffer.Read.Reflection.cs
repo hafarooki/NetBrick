@@ -1,4 +1,4 @@
- /* Copyright (c) 2010 Michael Lidgren
+/* Copyright (c) 2010 Michael Lidgren
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without
@@ -16,92 +16,95 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRA
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
 using System;
 using System.Reflection;
 
 namespace Lidgren.Network
 {
-	public partial class NetBuffer
-	{
-		/// <summary>
-		/// Reads all public and private declared instance fields of the object in alphabetical order using reflection
-		/// </summary>
-		public void ReadAllFields(object target)
-		{
-			ReadAllFields(target, BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-		}
+    public partial class NetBuffer
+    {
+        /// <summary>
+        ///     Reads all public and private declared instance fields of the object in alphabetical order using reflection
+        /// </summary>
+        public void ReadAllFields(object target)
+        {
+            ReadAllFields(target,
+                BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+        }
 
-		/// <summary>
-		/// Reads all fields with the specified binding of the object in alphabetical order using reflection
-		/// </summary>
-		public void ReadAllFields(object target, BindingFlags flags)
-		{
-			if (target == null)
-				throw new ArgumentNullException("target");
+        /// <summary>
+        ///     Reads all fields with the specified binding of the object in alphabetical order using reflection
+        /// </summary>
+        public void ReadAllFields(object target, BindingFlags flags)
+        {
+            if (target == null)
+                throw new ArgumentNullException("target");
 
-			Type tp = target.GetType();
+            var tp = target.GetType();
 
-			FieldInfo[] fields = tp.GetFields(flags);
-			NetUtility.SortMembersList(fields);
+            var fields = tp.GetFields(flags);
+            NetUtility.SortMembersList(fields);
 
-			foreach (FieldInfo fi in fields)
-			{
-				object value;
+            foreach (var fi in fields)
+            {
+                object value;
 
-				// find read method
-				MethodInfo readMethod;
-				if (s_readMethods.TryGetValue(fi.FieldType, out readMethod))
-				{
-					// read value
-					value = readMethod.Invoke(this, null);
+                // find read method
+                MethodInfo readMethod;
+                if (s_readMethods.TryGetValue(fi.FieldType, out readMethod))
+                {
+                    // read value
+                    value = readMethod.Invoke(this, null);
 
-					// set the value
-					fi.SetValue(target, value);
-				}
-			}
-		}
+                    // set the value
+                    fi.SetValue(target, value);
+                }
+            }
+        }
 
-		/// <summary>
-		/// Reads all public and private declared instance fields of the object in alphabetical order using reflection
-		/// </summary>
-		public void ReadAllProperties(object target)
-		{
-			ReadAllProperties(target, BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-		}
+        /// <summary>
+        ///     Reads all public and private declared instance fields of the object in alphabetical order using reflection
+        /// </summary>
+        public void ReadAllProperties(object target)
+        {
+            ReadAllProperties(target,
+                BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+        }
 
-		/// <summary>
-		/// Reads all fields with the specified binding of the object in alphabetical order using reflection
-		/// </summary>
-		public void ReadAllProperties(object target, BindingFlags flags)
-		{
-			if (target == null)
-				throw new ArgumentNullException("target");
+        /// <summary>
+        ///     Reads all fields with the specified binding of the object in alphabetical order using reflection
+        /// </summary>
+        public void ReadAllProperties(object target, BindingFlags flags)
+        {
+            if (target == null)
+                throw new ArgumentNullException("target");
 
-			Type tp = target.GetType();
+            var tp = target.GetType();
 
-			PropertyInfo[] fields = tp.GetProperties(flags);
-			NetUtility.SortMembersList(fields);
-			foreach (PropertyInfo fi in fields)
-			{
-				object value;
+            var fields = tp.GetProperties(flags);
+            NetUtility.SortMembersList(fields);
+            foreach (var fi in fields)
+            {
+                object value;
 
-				// find read method
-				MethodInfo readMethod;
-				if (s_readMethods.TryGetValue(fi.PropertyType, out readMethod))
-				{
-					// read value
-					value = readMethod.Invoke(this, null);
+                // find read method
+                MethodInfo readMethod;
+                if (s_readMethods.TryGetValue(fi.PropertyType, out readMethod))
+                {
+                    // read value
+                    value = readMethod.Invoke(this, null);
 
-					// set the value
+                    // set the value
 #if UNITY_WEBPLAYER || UNITY_4_5
-					var setMethod = fi.GetSetMethod();
+                    var setMethod = fi.GetSetMethod();
 #else
 					var setMethod = fi.SetMethod;
 #endif
-					if (setMethod != null)
-						setMethod.Invoke(target, new object[] { value });
-				}
-			}
-		}
-	}
+                    if (setMethod != null)
+                        setMethod.Invoke(target, new[] {value});
+                }
+            }
+        }
+    }
 }

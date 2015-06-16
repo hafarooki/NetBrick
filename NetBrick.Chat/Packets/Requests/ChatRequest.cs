@@ -1,6 +1,4 @@
-﻿using NetBrick.Core;
-
-namespace NetBrick.Chat.Packets.Requests
+﻿namespace NetBrick.Chat.Packets.Requests
 {
     public class ChatRequest
     {

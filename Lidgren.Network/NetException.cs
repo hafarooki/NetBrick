@@ -16,59 +16,58 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRA
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
 using System;
 using System.Diagnostics;
-using System.Runtime.Serialization;
 
 namespace Lidgren.Network
 {
-	/// <summary>
-	/// Exception thrown in the Lidgren Network Library
-	/// </summary>
-	public sealed class NetException : Exception
-	{
-		/// <summary>
-		/// NetException constructor
-		/// </summary>
-		public NetException()
-			: base()
-		{
-		}
+    /// <summary>
+    ///     Exception thrown in the Lidgren Network Library
+    /// </summary>
+    public sealed class NetException : Exception
+    {
+        /// <summary>
+        ///     NetException constructor
+        /// </summary>
+        public NetException()
+        {
+        }
 
-		/// <summary>
-		/// NetException constructor
-		/// </summary>
-		public NetException(string message)
-			: base(message)
-		{
-		}
+        /// <summary>
+        ///     NetException constructor
+        /// </summary>
+        public NetException(string message)
+            : base(message)
+        {
+        }
 
-		/// <summary>
-		/// NetException constructor
-		/// </summary>
-		public NetException(string message, Exception inner)
-			: base(message, inner)
-		{
-		}
+        /// <summary>
+        ///     NetException constructor
+        /// </summary>
+        public NetException(string message, Exception inner)
+            : base(message, inner)
+        {
+        }
 
-		/// <summary>
-		/// Throws an exception, in DEBUG only, if first parameter is false
-		/// </summary>
-		[Conditional("DEBUG")]
-		public static void Assert(bool isOk, string message)
-		{
-			if (!isOk)
-				throw new NetException(message);
-		}
+        /// <summary>
+        ///     Throws an exception, in DEBUG only, if first parameter is false
+        /// </summary>
+        [Conditional("DEBUG")]
+        public static void Assert(bool isOk, string message)
+        {
+            if (!isOk)
+                throw new NetException(message);
+        }
 
-		/// <summary>
-		/// Throws an exception, in DEBUG only, if first parameter is false
-		/// </summary>
-		[Conditional("DEBUG")]
-		public static void Assert(bool isOk)
-		{
-			if (!isOk)
-				throw new NetException();
-		}
-	}
+        /// <summary>
+        ///     Throws an exception, in DEBUG only, if first parameter is false
+        /// </summary>
+        [Conditional("DEBUG")]
+        public static void Assert(bool isOk)
+        {
+            if (!isOk)
+                throw new NetException();
+        }
+    }
 }

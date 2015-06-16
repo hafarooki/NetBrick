@@ -356,7 +356,7 @@ namespace Lidgren.Network
             }
         }
 
-        public int SignValue { get; }
+        public int SignValue { get; set; }
 
         private static int GetByteLength(
             int nBits)

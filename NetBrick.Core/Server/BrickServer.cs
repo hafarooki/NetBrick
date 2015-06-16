@@ -35,10 +35,11 @@ namespace NetBrick.Core.Server
 
             _handlers = new Dictionary<PacketIdentifier, PacketHandler>();
             _serverHandlers = new Dictionary<PacketIdentifier, PacketHandler>();
+        }
 
+        public void Start()
+        {
             _server.Start();
-
-            OnServerStarted();
         }
 
         public Dictionary<IPEndPoint, BrickPeer> Peers { get; set; }
@@ -72,8 +73,9 @@ namespace NetBrick.Core.Server
 
                         var packet = new Packet(message);
                         PacketHandler handler;
-                        (peer.IsServer ? _serverHandlers : _handlers).TryGetValue(new PacketIdentifier() { PacketCode = packet.PacketCode, PacketType = packet.PacketType }, out handler);
-                        }
+                        (peer.IsServer ? _serverHandlers : _handlers).TryGetValue(new PacketIdentifier { PacketCode = packet.PacketCode, PacketType = packet.PacketType }, out handler);
+                        handler?.Handle(packet, peer);
+                    }
                         break;
                     case NetIncomingMessageType.ConnectionApproval:
                         message.SenderConnection.Approve();
@@ -85,10 +87,12 @@ namespace NetBrick.Core.Server
                         {
                             case NetConnectionStatus.Connected:
                             {
-                                var peer = new BrickPeer();
+                                var peer = new BrickPeer
+                                {
+                                    Connection = message.SenderConnection,
+                                    IsServer = ServerIpList.Contains(message.SenderEndPoint)
+                                };
 
-                                peer.Connection = message.SenderConnection;
-                                peer.IsServer = ServerIpList.Contains(message.SenderEndPoint);
 
                                 var handler = CreateHandler();
 
@@ -142,12 +146,7 @@ namespace NetBrick.Core.Server
             var message = _server.CreateMessage();
             message.Write(packet.ToMessage());
 
-            var connections = new List<NetConnection>();
-
-            foreach (var peer in recipients)
-            {
-                connections.Add(peer.Connection);
-            }
+            var connections = recipients.Select(peer => peer.Connection).ToList();
 
             _server.SendMessage(message, connections, method, sequenceChannel);
         }
@@ -186,6 +185,5 @@ namespace NetBrick.Core.Server
 
         public abstract BasePeerHandler CreateHandler();
         public abstract void Log(LogLevel level, string message, params object[] args);
-        protected abstract void OnServerStarted();
     }
 }

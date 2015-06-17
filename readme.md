@@ -1,4 +1,5 @@
-NetBrick C# Networking Framework
+| NetBrick | C# Networking Framework |
+|----------|-------------------------|
 
 NetBrick is a C# networking framework designed for making multiplayer games with C#. It is specifically designed for use with Unity3D, but it should work with other C# game engines as well.
 

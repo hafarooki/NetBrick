@@ -1,7 +1,7 @@
 NetBrick C# Networking Framework
 ================================
 
-####NetBrick is a C# networking framework for multiplayer games. It is compatible with any C# game engine.
+######NetBrick is a C# networking framework for multiplayer games. It is compatible with any C# game engine.
 
 Todo list:
 ----------

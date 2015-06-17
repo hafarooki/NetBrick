@@ -18,15 +18,14 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #if !__NOIPENDPOINT__
+using System.Net.Sockets;
+using System;
+using System.Collections.Generic;
 using System.Reflection;
 using NetEndPoint = System.Net.IPEndPoint;
 using NetAddress = System.Net.IPAddress;
 #endif
-using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
-using System.Reflection;
 using System.Text;
 
 namespace Lidgren.Network
@@ -46,7 +45,7 @@ namespace Lidgren.Network
         /// </summary>
         public delegate void ResolveEndPointCallback(NetEndPoint endPoint);
 
-        private static NetAddress s_broadcastAddress;
+        private static NetAddress _sBroadcastAddress;
 
         /// <summary>
         ///     Get IPv4 endpoint from notation (xxx.xxx.xxx.xxx) or hostname and port number (asynchronous version)
@@ -77,9 +76,9 @@ namespace Lidgren.Network
 
         public static NetAddress GetCachedBroadcastAddress()
         {
-            if (s_broadcastAddress == null)
-                s_broadcastAddress = GetBroadcastAddress();
-            return s_broadcastAddress;
+            if (_sBroadcastAddress == null)
+                _sBroadcastAddress = GetBroadcastAddress();
+            return _sBroadcastAddress;
         }
 
         /// <summary>
@@ -92,7 +91,7 @@ namespace Lidgren.Network
 
             ipOrHost = ipOrHost.Trim();
 
-            NetAddress ipAddress = null;
+            NetAddress ipAddress;
             if (NetAddress.TryParse(ipOrHost, out ipAddress))
             {
                 if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
@@ -167,7 +166,7 @@ namespace Lidgren.Network
 
             ipOrHost = ipOrHost.Trim();
 
-            NetAddress ipAddress = null;
+            NetAddress ipAddress;
             if (NetAddress.TryParse(ipOrHost, out ipAddress))
             {
                 if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
@@ -365,8 +364,6 @@ namespace Lidgren.Network
                 case NetDeliveryMethod.ReliableOrdered:
                     return NetConstants.ReliableOrderedWindowSize;
 
-                case NetDeliveryMethod.ReliableSequenced:
-                case NetDeliveryMethod.ReliableUnordered:
                 default:
                     return NetConstants.DefaultWindowSize;
             }
@@ -440,10 +437,10 @@ namespace Lidgren.Network
             return bdr.ToString();
         }
 
-        public static byte[] ComputeSHAHash(byte[] bytes)
+        public static byte[] ComputeShaHash(byte[] bytes)
         {
             // this is defined in the platform specific files
-            return ComputeSHAHash(bytes, 0, bytes.Length);
+            return ComputeShaHash(bytes, 0, bytes.Length);
         }
     }
 }

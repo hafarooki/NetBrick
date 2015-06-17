@@ -10,9 +10,10 @@ namespace NetBrick.Core.Server
 {
     public abstract class BrickServer
     {
-        private readonly Dictionary<PacketIdentifier, PacketHandler> _handlers;
+        private readonly Dictionary<short, PacketHandler> _eventHandlers;
+        private readonly Dictionary<short, PacketHandler> _requestHandlers;
+        private readonly Dictionary<short, PacketHandler> _responseHandlers;
         private readonly NetServer _server;
-        private readonly Dictionary<PacketIdentifier, PacketHandler> _serverHandlers;
 
         protected BrickServer(string appIdentifier, int port, string address, int maxConnections,
             bool runOnNewThread = true)
@@ -30,10 +31,12 @@ namespace NetBrick.Core.Server
             _server = new NetServer(config);
 
             if (runOnNewThread)
-                new Thread(Listen).Start();
+                new Thread(ListenLoop).Start();
 
-            _handlers = new Dictionary<PacketIdentifier, PacketHandler>();
-            _serverHandlers = new Dictionary<PacketIdentifier, PacketHandler>();
+            _requestHandlers = new Dictionary<short, PacketHandler>();
+            _responseHandlers = new Dictionary<short, PacketHandler>();
+            _eventHandlers = new Dictionary<short, PacketHandler>();
+            Peers = new Dictionary<IPEndPoint, BrickPeer>();
         }
 
         protected abstract List<IPEndPoint> ServerIpList { get; }
@@ -54,83 +57,113 @@ namespace NetBrick.Core.Server
             _server.Start();
         }
 
-        public void Listen()
+        public void ListenLoop()
         {
             while (!Environment.HasShutdownStarted)
             {
-                var message = _server.ReadMessage();
+                Listen();
+            }
+        }
 
-                if (message == null) continue;
+        private void Listen()
+        {
+            var message = _server.ReadMessage();
 
-                switch (message.MessageType)
+            if (message == null) return;
+
+            switch (message.MessageType)
+            {
+                case NetIncomingMessageType.Data:
                 {
-                    case NetIncomingMessageType.Data:
+                    BrickPeer peer;
+                    Peers.TryGetValue(message.SenderEndPoint, out peer);
+
+                    if (peer == null)
                     {
-                        BrickPeer peer;
-                        Peers.TryGetValue(message.SenderEndPoint, out peer);
-
-                        if (peer == null) throw new Exception("Nonexistant peer sent message!");
-
-                        var packet = new Packet(message);
-                        PacketHandler handler;
-                        (peer.IsServer ? _serverHandlers : _handlers).TryGetValue(
-                            new PacketIdentifier {PacketCode = packet.PacketCode, PacketType = packet.PacketType},
-                            out handler);
-                        handler?.Handle(packet, peer);
+                        Log(LogLevel.Warn,
+                            "A nonexistent peer of the endpoint {0} has tried sending a packet. Disconnected the connection.",
+                            message.SenderEndPoint);
+                        message.SenderConnection.Disconnect("Nonexistent peer detected.");
+                        return;
                     }
-                        break;
-                    case NetIncomingMessageType.ConnectionApproval:
-                        message.SenderConnection.Approve();
-                        break;
-                    case NetIncomingMessageType.StatusChanged:
-                        var status = (NetConnectionStatus) message.ReadByte();
-                        Log(LogLevel.Info, "Status Changed for {0}. New Status: {1}", message.SenderEndPoint, status);
-                        switch (status)
-                        {
-                            case NetConnectionStatus.Connected:
-                            {
-                                var peer = new BrickPeer
-                                {
-                                    Connection = message.SenderConnection,
-                                    IsServer = ServerIpList.Contains(message.SenderEndPoint)
-                                };
 
+                    var packet = new Packet(message);
+                    PacketHandler handler = null;
 
-                                var handler = CreateHandler();
+                    switch (packet.PacketType)
+                    {
+                        case PacketType.Request:
+                            _requestHandlers.TryGetValue(packet.PacketCode, out handler);
+                            break;
+                        case PacketType.Response:
+                            _responseHandlers.TryGetValue(packet.PacketCode, out handler);
+                            break;
+                        case PacketType.Event:
+                            _eventHandlers.TryGetValue(packet.PacketCode, out handler);
+                            break;
+                    }
 
-                                peer.PeerHandler = handler;
-                                handler.Peer = peer;
-
-                                Peers.Add(peer.Connection.RemoteEndPoint, peer);
-                                handler.OnConnect(message.SenderEndPoint);
-                            }
-                                break;
-                            case NetConnectionStatus.Disconnected:
-                            {
-                                BrickPeer peer;
-                                Peers.TryGetValue(message.SenderEndPoint, out peer);
-
-                                if (peer == null) throw new Exception("Nonexistant peer disconnected!");
-
-                                peer.PeerHandler.OnDisconnect(message.ReadString());
-                            }
-                                break;
-                        }
-                        break;
-                    case NetIncomingMessageType.VerboseDebugMessage:
-                    case NetIncomingMessageType.DebugMessage:
-                        Log(LogLevel.Info, message.ReadString());
-                        break;
-                    case NetIncomingMessageType.ErrorMessage:
-                        Log(LogLevel.Error, message.ReadString());
-                        break;
-                    case NetIncomingMessageType.WarningMessage:
-                        Log(LogLevel.Warn, message.ReadString());
-                        break;
-                    default:
-                        Log(LogLevel.Warn, "Unhandled lidgren message \"{0}\" received.", message.MessageType);
-                        break;
+                    handler?.Handle(packet, peer);
                 }
+                    break;
+                case NetIncomingMessageType.ConnectionApproval:
+                    message.SenderConnection.Approve();
+                    break;
+                case NetIncomingMessageType.StatusChanged:
+                    var status = (NetConnectionStatus) message.ReadByte();
+                    Log(LogLevel.Info, "Status Changed for {0}. New Status: {1}", message.SenderEndPoint, status);
+                    switch (status)
+                    {
+                        case NetConnectionStatus.Connected:
+                        {
+                            var peer = new BrickPeer
+                            {
+                                Connection = message.SenderConnection,
+                                IsServer = ServerIpList.Contains(message.SenderEndPoint)
+                            };
+
+
+                            var handler = CreateHandler();
+
+                            peer.PeerHandler = handler;
+                            handler.Peer = peer;
+
+                            Peers.Add(peer.Connection.RemoteEndPoint, peer);
+                            handler.OnConnect(message.SenderEndPoint);
+                        }
+                            break;
+                        case NetConnectionStatus.Disconnected:
+                        {
+                            BrickPeer peer;
+                            Peers.TryGetValue(message.SenderEndPoint, out peer);
+
+                            if (peer == null)
+                            {
+                                Log(LogLevel.Warn,
+                                    "A nonexistent peer of the endpoint {0} has tried sending disconnecting.",
+                                    message.SenderEndPoint);
+                                message.SenderConnection.Disconnect("Nonexistent peer detected.");
+                                return;
+                            }
+
+                            peer.PeerHandler.OnDisconnect(message.ReadString());
+                        }
+                            break;
+                    }
+                    break;
+                case NetIncomingMessageType.VerboseDebugMessage:
+                case NetIncomingMessageType.DebugMessage:
+                    Log(LogLevel.Info, message.ReadString());
+                    break;
+                case NetIncomingMessageType.ErrorMessage:
+                    Log(LogLevel.Error, message.ReadString());
+                    break;
+                case NetIncomingMessageType.WarningMessage:
+                    Log(LogLevel.Warn, message.ReadString());
+                    break;
+                default:
+                    Log(LogLevel.Warn, "Unhandled lidgren message \"{0}\" received.", message.MessageType);
+                    break;
             }
         }
 
@@ -162,22 +195,34 @@ namespace NetBrick.Core.Server
 
         public void AddHandler(PacketHandler handler)
         {
-            _handlers.Add(new PacketIdentifier {PacketCode = handler.Code, PacketType = handler.Type}, handler);
+            switch (handler.Type)
+            {
+                case PacketType.Event:
+                    _eventHandlers.Add(handler.Code, handler);
+                    break;
+                case PacketType.Request:
+                    _requestHandlers.Add(handler.Code, handler);
+                    break;
+                case PacketType.Response:
+                    _responseHandlers.Add(handler.Code, handler);
+                    break;
+            }
         }
 
         public void RemoveHandler(PacketHandler handler)
         {
-            _handlers.Remove(new PacketIdentifier {PacketCode = handler.Code, PacketType = handler.Type});
-        }
-
-        public void AddServerHandler(PacketHandler handler)
-        {
-            _serverHandlers.Add(new PacketIdentifier {PacketCode = handler.Code, PacketType = handler.Type}, handler);
-        }
-
-        public void RemoveServerHandler(PacketHandler handler)
-        {
-            _serverHandlers.Remove(new PacketIdentifier {PacketCode = handler.Code, PacketType = handler.Type});
+            switch (handler.Type)
+            {
+                case PacketType.Event:
+                    _eventHandlers.Remove(handler.Code);
+                    break;
+                case PacketType.Request:
+                    _requestHandlers.Remove(handler.Code);
+                    break;
+                case PacketType.Response:
+                    _responseHandlers.Remove(handler.Code);
+                    break;
+            }
         }
 
         public void ConnectToServer(string address, int port)

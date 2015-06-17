@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Lidgren.Network;
 using NetBrick.Core.Client.Handlers;
 
@@ -8,9 +7,11 @@ namespace NetBrick.Core.Client
     public abstract class BrickClient
     {
         private readonly NetClient _client;
-        private readonly List<PacketHandler> _handlers;
+        private readonly Dictionary<short, PacketHandler> _eventHandlers;
+        private readonly Dictionary<short, PacketHandler> _requestHandlers;
+        private readonly Dictionary<short, PacketHandler> _responseHandlers;
 
-        public BrickClient(string appIdentifier)
+        protected BrickClient(string appIdentifier)
         {
             var config = new NetPeerConfiguration(appIdentifier);
 
@@ -19,7 +20,11 @@ namespace NetBrick.Core.Client
 
             _client = new NetClient(config);
 
-            _handlers = new List<PacketHandler>();
+            _requestHandlers = new Dictionary<short, PacketHandler>();
+            _responseHandlers = new Dictionary<short, PacketHandler>();
+            _eventHandlers = new Dictionary<short, PacketHandler>();
+
+            _client.Start();
         }
 
         public void Listen()
@@ -32,14 +37,22 @@ namespace NetBrick.Core.Client
                 case NetIncomingMessageType.Data:
                 {
                     var packet = new Packet(message);
-                    var handlers = from h in _handlers
-                        where h.Code == packet.PacketCode && h.Type == packet.PacketType
-                        select h;
+                    PacketHandler handler = null;
 
-                    foreach (var handler in handlers)
-                    {
-                        handler.Handle(packet);
-                    }
+                        switch (packet.PacketType)
+                        {
+                            case PacketType.Request:
+                                _requestHandlers.TryGetValue(packet.PacketCode, out handler);
+                                break;
+                            case PacketType.Response:
+                                _responseHandlers.TryGetValue(packet.PacketCode, out handler);
+                                break;
+                            case PacketType.Event:
+                                _eventHandlers.TryGetValue(packet.PacketCode, out handler);
+                                break;
+                        }
+
+                        handler?.Handle(packet);
                 }
                     break;
                 case NetIncomingMessageType.StatusChanged:
@@ -61,8 +74,8 @@ namespace NetBrick.Core.Client
             }
         }
 
-        public abstract void Log(LogLevel info, string v, params object[] args);
-        protected abstract void OnDisconnect(string v);
+        public abstract void Log(LogLevel level, string message, params object[] args);
+        protected abstract void OnDisconnect(string reason);
         protected abstract void OnConnect();
 
         public void Connect(string address, int port)
@@ -73,6 +86,45 @@ namespace NetBrick.Core.Client
         public void Disconnect(string reason = "Client disconnected.")
         {
             _client.Disconnect(reason);
+        }
+
+        public void AddHandler(PacketHandler handler)
+        {
+            switch (handler.Type)
+            {
+                case PacketType.Event:
+                    _eventHandlers.Add(handler.Code, handler);
+                    break;
+                case PacketType.Request:
+                    _requestHandlers.Add(handler.Code, handler);
+                    break;
+                case PacketType.Response:
+                    _responseHandlers.Add(handler.Code, handler);
+                    break;
+            }
+        }
+
+        public void RemoveHandler(PacketHandler handler)
+        {
+            switch (handler.Type)
+            {
+                case PacketType.Event:
+                    _eventHandlers.Remove(handler.Code);
+                    break;
+                case PacketType.Request:
+                    _requestHandlers.Remove(handler.Code);
+                    break;
+                case PacketType.Response:
+                    _responseHandlers.Remove(handler.Code);
+                    break;
+            }
+        }
+
+        public void Send(Packet packet, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered, int sequenceChannel = 0)
+        {
+            var message = _client.CreateMessage();
+            message.Write(packet.ToMessage());
+            _client.SendMessage(message, method, sequenceChannel);
         }
     }
 }

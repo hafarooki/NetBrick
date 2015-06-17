@@ -76,7 +76,7 @@ namespace Lidgren.Network
         ///     String to hash for key
         /// </summary>
         public NetXtea(NetPeer peer, string key)
-            : this(peer, NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(key)), 32)
+            : this(peer, NetUtility.ComputeShaHash(Encoding.UTF8.GetBytes(key)), 32)
         {
         }
 
@@ -90,7 +90,7 @@ namespace Lidgren.Network
 
         public override void SetKey(byte[] data, int offset, int length)
         {
-            var key = NetUtility.ComputeSHAHash(data, offset, length);
+            var key = NetUtility.ComputeShaHash(data, offset, length);
             NetException.Assert(key.Length >= 16);
             SetKey(key, 0, 16);
         }

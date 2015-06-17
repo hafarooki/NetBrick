@@ -143,7 +143,7 @@ namespace Lidgren.Network
             return new IPAddress(bytes);
         }
 
-        public static byte[] ComputeSHAHash(byte[] bytes, int offset, int count)
+        public static byte[] ComputeShaHash(byte[] bytes, int offset, int count)
         {
             return s_sha.ComputeHash(bytes, offset, count);
         }

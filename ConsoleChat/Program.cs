@@ -1,26 +1,28 @@
 ﻿using System;
+using System.Threading;
+using ConsoleChat.Client;
+using ConsoleChat.Server;
 
 namespace ConsoleChat
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            if (args.Length != 1)
-            {
-                Console.Error.WriteLine("Invalid input - must be one argument (Server or Client)");
-                Console.ReadKey(true);
-            }
+            Console.WriteLine("Server, or Client?");
 
-            switch (args[0])
+            switch (Console.ReadLine())
             {
                 case "Server":
-
+                    ChatServer.Instance.Start();
                     break;
                 case "Client":
+                    new Thread(ChatClient.Instance.ListenLoop).Start();
+                    ChatClient.Instance.Connect("localhost", 25000);
                     break;
                 default:
-                    Console.Error.WriteLine("Invalid input - must be either Server or Client");
+                    Console.Error.WriteLine("Invalid input - must be either Server or Client.\nPress any key to exit...");
+                    Console.ReadKey(true);
                     break;
             }
         }

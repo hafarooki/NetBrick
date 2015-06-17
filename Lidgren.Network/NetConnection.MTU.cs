@@ -101,7 +101,7 @@
             om.m_messageType = NetMessageType.ExpandMTURequest;
             var len = om.Encode(m_peer.m_sendBuffer, 0, 0);
 
-            var ok = m_peer.SendMTUPacket(len, m_remoteEndPoint);
+            var ok = m_peer.SendMtuPacket(len, m_remoteEndPoint);
             if (ok == false)
             {
                 //m_peer.LogDebug("Send MTU failed for size " + size);

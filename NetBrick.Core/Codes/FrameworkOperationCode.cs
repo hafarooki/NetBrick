@@ -2,6 +2,5 @@
 {
     public enum FrameworkOperationCode : short
     {
-        Chat = -1
     }
 }

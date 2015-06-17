@@ -33,7 +33,7 @@ namespace Lidgren.Network
     public partial class NetPeer
     {
 #if DEBUG
-        private readonly List<DelayedPacket> m_delayedPackets = new List<DelayedPacket>();
+        private readonly List<DelayedPacket> _mDelayedPackets = new List<DelayedPacket>();
 
         private class DelayedPacket
         {
@@ -93,7 +93,7 @@ namespace Lidgren.Network
                 Buffer.BlockCopy(m_sendBuffer, 0, p.Data, 0, numBytes);
                 p.DelayedUntil = NetTime.Now + delay;
 
-                m_delayedPackets.Add(p);
+                _mDelayedPackets.Add(p);
             }
 
             // LogVerbose("Sending packet " + numBytes + " bytes - delayed " + NetTime.ToReadable(delay));
@@ -101,7 +101,7 @@ namespace Lidgren.Network
 
         private void SendDelayedPackets()
         {
-            if (m_delayedPackets.Count <= 0)
+            if (_mDelayedPackets.Count <= 0)
                 return;
 
             var now = NetTime.Now;
@@ -109,12 +109,12 @@ namespace Lidgren.Network
             bool connectionReset;
 
             RestartDelaySending:
-            foreach (var p in m_delayedPackets)
+            foreach (var p in _mDelayedPackets)
             {
                 if (now > p.DelayedUntil)
                 {
                     ActuallySendPacket(p.Data, p.Data.Length, p.Target, out connectionReset);
-                    m_delayedPackets.Remove(p);
+                    _mDelayedPackets.Remove(p);
                     goto RestartDelaySending;
                 }
             }
@@ -125,9 +125,9 @@ namespace Lidgren.Network
             try
             {
                 bool connectionReset;
-                foreach (var p in m_delayedPackets)
+                foreach (var p in _mDelayedPackets)
                     ActuallySendPacket(p.Data, p.Data.Length, p.Target, out connectionReset);
-                m_delayedPackets.Clear();
+                _mDelayedPackets.Clear();
             }
             catch
             {
@@ -224,12 +224,12 @@ namespace Lidgren.Network
             return true;
         }
 #else
-		internal bool SendMTUPacket(int numBytes, NetEndPoint target)
+		internal bool SendMtuPacket(int numBytes, NetEndPoint target)
 		{
 			try
 			{
-				m_socket.DontFragment = true;
-				int bytesSent = m_socket.SendTo(m_sendBuffer, 0, numBytes, SocketFlags.None, target);
+				Socket.DontFragment = true;
+				int bytesSent = Socket.SendTo(m_sendBuffer, 0, numBytes, SocketFlags.None, target);
 				if (numBytes != bytesSent)
 					LogWarning("Failed to send the full " + numBytes + "; only " + bytesSent + " bytes sent in packet!");
 			}
@@ -253,7 +253,7 @@ namespace Lidgren.Network
 			}
 			finally
 			{
-				m_socket.DontFragment = false;
+				Socket.DontFragment = false;
 			}
 			return true;
 		}
@@ -273,9 +273,9 @@ namespace Lidgren.Network
 				// TODO: refactor this check outta here
 				ba = NetUtility.GetCachedBroadcastAddress();
 				if (target.Address == ba)
-					m_socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
+					Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
 
-				int bytesSent = m_socket.SendTo(m_sendBuffer, 0, numBytes, SocketFlags.None, target);
+				int bytesSent = Socket.SendTo(m_sendBuffer, 0, numBytes, SocketFlags.None, target);
 				if (numBytes != bytesSent)
 					LogWarning("Failed to send the full " + numBytes + "; only " + bytesSent + " bytes sent in packet!");
 			}
@@ -302,7 +302,7 @@ namespace Lidgren.Network
 			finally
 			{
 				if (target.Address == ba)
-					m_socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, false);
+					Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, false);
 			}
 			return;
 		}

@@ -16,4 +16,4 @@ Todo list:
 Getting Started
 ---------------
 
-A chat example is current complete. More examples will be added as the framework becomes more complete. Documentation will also be made.
+A chat example is currently complete. More examples will be added as the framework becomes more complete. Documentation will also be made.

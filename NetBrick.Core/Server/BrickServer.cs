@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Lidgren.Network;
 using NetBrick.Core.Server.Handlers;
@@ -37,6 +38,15 @@ namespace NetBrick.Core.Server
             _responseHandlers = new Dictionary<short, PacketHandler>();
             _eventHandlers = new Dictionary<short, PacketHandler>();
             Peers = new Dictionary<IPEndPoint, BrickPeer>();
+
+            new Thread(() =>
+            {
+                while (!Environment.HasShutdownStarted) ;
+                foreach (var peer in Peers.Values)
+                {
+                    peer.Kick("Server shut down.");
+                }
+            }).Start();
         }
 
         protected abstract List<IPEndPoint> ServerIpList { get; }
@@ -130,6 +140,8 @@ namespace NetBrick.Core.Server
 
                             Peers.Add(peer.Connection.RemoteEndPoint, peer);
                             handler.OnConnect(message.SenderEndPoint);
+
+                                if(peer.IsServer) ConnectToServer(message.SenderEndPoint.Address.ToString(), message.SenderEndPoint.Port);
                         }
                             break;
                         case NetConnectionStatus.Disconnected:

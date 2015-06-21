@@ -224,7 +224,7 @@ namespace Lidgren.Network
             return true;
         }
 #else
-		internal bool SendMtuPacket(int numBytes, NetEndPoint target)
+		internal bool SendMTUPacket(int numBytes, NetEndPoint target)
 		{
 			try
 			{

@@ -140,8 +140,6 @@ namespace NetBrick.Core.Server
 
                             Peers.Add(peer.Connection.RemoteEndPoint, peer);
                             handler.OnConnect(message.SenderEndPoint);
-
-                                if(peer.IsServer) ConnectToServer(message.SenderEndPoint.Address.ToString(), message.SenderEndPoint.Port);
                         }
                             break;
                         case NetConnectionStatus.Disconnected:

@@ -2,5 +2,7 @@
 {
     public enum FrameworkParameterCode : byte
     {
+        AesKey,
+        AesIV
     }
 }

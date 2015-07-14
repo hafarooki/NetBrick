@@ -2,5 +2,6 @@
 {
     public enum FrameworkOperationCode : short
     {
+        EstablishEncryption = -1
     }
 }

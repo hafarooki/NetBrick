@@ -12,6 +12,13 @@ namespace NetBrick.Login.Server
         public DateTime Registered { get; set; }
         public DateTime Updated { get; set; }
 
+        /// <summary>
+        /// For (de)serialization only.
+        /// </summary>
+        public BaseAccount()
+        {
+        }
+
         public BaseAccount(string username, string password, string email)
         {
             Username = username;

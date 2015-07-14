@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using Lidgren.Network;
 using NetBrick.Core.Client.Handlers;
+using System;
+using System.Security.Cryptography;
+using NetBrick.Core.Codes;
 
 namespace NetBrick.Core.Client
 {
@@ -10,6 +13,10 @@ namespace NetBrick.Core.Client
         private readonly Dictionary<short, PacketHandler> _eventHandlers;
         private readonly Dictionary<short, PacketHandler> _requestHandlers;
         private readonly Dictionary<short, PacketHandler> _responseHandlers;
+        public byte[] AesKey { get; set; }
+        public byte[] AesIV { get; set; }
+
+        public virtual string RsaXml { get { throw new NotImplementedException("RsaXml not implemented on the client."); } }
 
         protected BrickClient(string appIdentifier)
         {
@@ -35,9 +42,9 @@ namespace NetBrick.Core.Client
             switch (message.MessageType)
             {
                 case NetIncomingMessageType.Data:
-                {
-                    var packet = new Packet(message);
-                    PacketHandler handler = null;
+                    {
+                        var packet = new Packet(message);
+                        PacketHandler handler = null;
 
                         switch (packet.PacketType)
                         {
@@ -53,23 +60,23 @@ namespace NetBrick.Core.Client
                         }
 
                         handler?.Handle(packet);
-                }
+                    }
                     break;
                 case NetIncomingMessageType.StatusChanged:
-                {
-                    var status = (NetConnectionStatus) message.ReadByte();
-                    Log(LogLevel.Info, "Status Changed: {0}", status);
-
-                    switch (status)
                     {
-                        case NetConnectionStatus.Connected:
-                            OnConnect();
-                            break;
-                        case NetConnectionStatus.Disconnected:
-                            OnDisconnect(message.ReadString());
-                            break;
+                        var status = (NetConnectionStatus)message.ReadByte();
+                        Log(LogLevel.Info, "Status Changed: {0}", status);
+
+                        switch (status)
+                        {
+                            case NetConnectionStatus.Connected:
+                                OnConnect();
+                                break;
+                            case NetConnectionStatus.Disconnected:
+                                OnDisconnect(message.ReadString());
+                                break;
+                        }
                     }
-                }
                     break;
             }
         }
@@ -125,6 +132,46 @@ namespace NetBrick.Core.Client
             var message = _client.CreateMessage();
             message.Write(packet.ToMessage());
             _client.SendMessage(message, method, sequenceChannel);
+        }
+
+        public void EstablishEncryption()
+        {
+            using (var rsa = new RSACryptoServiceProvider())
+            {
+                rsa.FromXmlString(RsaXml);
+                using (var aes = Aes.Create())
+                {
+                    aes.GenerateKey();
+                    aes.GenerateIV();
+                    AesKey = aes.Key;
+                    AesIV = aes.IV;
+
+                    var packet = new Packet(PacketType.Request, (short)FrameworkOperationCode.EstablishEncryption);
+                    packet.Parameters[(byte)FrameworkParameterCode.AesKey] = rsa.Encrypt(AesKey, true);
+                    packet.Parameters[(byte)FrameworkParameterCode.AesIV] = rsa.Encrypt(AesIV, true);
+                    Send(packet);
+                }
+            }
+        }
+
+        public byte[] Encrypt(byte[] plain)
+        {
+            using(var aes = Aes.Create())
+            {
+                aes.Key = AesKey;
+                aes.IV = AesIV;
+                return aes.CreateEncryptor().TransformFinalBlock(plain, 0, plain.Length);
+            }
+        }
+
+        public byte[] Decrypt(byte[] encrypted)
+        {
+            using(var aes = Aes.Create())
+            {
+                aes.Key = AesKey;
+                aes.IV = AesIV;
+                return aes.CreateDecryptor().TransformFinalBlock(encrypted, 0, encrypted.Length);
+            }
         }
     }
 }

@@ -59,7 +59,7 @@ namespace NetBrick.Login.Server
 
         public TAccountType RetrieveUser(string username)
         {
-            return GetBinaryData($"{Prefix}:Accounts{username}").FromBytes<TAccountType>();
+            return GetBinaryData($"{Prefix}:Accounts:{username}").FromBytes<TAccountType>();
         }
 
         public void DeleteUser(string username)

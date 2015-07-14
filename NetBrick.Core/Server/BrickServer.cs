@@ -16,6 +16,8 @@ namespace NetBrick.Core.Server
         private readonly Dictionary<short, PacketHandler> _responseHandlers;
         private readonly NetServer _server;
 
+        public virtual string RsaXml { get { throw new NotImplementedException("RsaXml not implemented on the server."); } }
+
         protected BrickServer(string appIdentifier, int port, string address, int maxConnections,
             bool runOnNewThread = true)
         {
@@ -47,20 +49,12 @@ namespace NetBrick.Core.Server
                     peer.Kick("Server shut down.");
                 }
             }).Start();
+
+            AddHandler(new EstablishEncryptionRequestHandler(this));
         }
 
         protected abstract List<IPEndPoint> ServerIpList { get; }
         public Dictionary<IPEndPoint, BrickPeer> Peers { get; set; }
-
-        public Dictionary<IPEndPoint, BrickPeer> Clients
-        {
-            get { return (Dictionary<IPEndPoint, BrickPeer>) Peers.Where(p => !p.Value.IsServer); }
-        }
-
-        public Dictionary<IPEndPoint, BrickPeer> Servers
-        {
-            get { return (Dictionary<IPEndPoint, BrickPeer>) Peers.Where(p => p.Value.IsServer); }
-        }
 
         public void Start()
         {
@@ -91,8 +85,7 @@ namespace NetBrick.Core.Server
                     if (peer == null)
                     {
                         Log(LogLevel.Warn,
-                            "A nonexistent peer of the endpoint {0} has tried sending a packet. Disconnected the connection.",
-                            message.SenderEndPoint);
+                            $"A nonexistent peer of the endpoint {message.SenderEndPoint} has tried sending a packet. Disconnected the connection.");
                         message.SenderConnection.Disconnect("Nonexistent peer detected.");
                         return;
                     }
@@ -121,7 +114,7 @@ namespace NetBrick.Core.Server
                     break;
                 case NetIncomingMessageType.StatusChanged:
                     var status = (NetConnectionStatus) message.ReadByte();
-                    Log(LogLevel.Info, "Status Changed for {0}. New Status: {1}", message.SenderEndPoint, status);
+                    Log(LogLevel.Info, $"Status Changed for {message.SenderEndPoint}. New Status: {status}");
                     switch (status)
                     {
                         case NetConnectionStatus.Connected:
@@ -133,7 +126,7 @@ namespace NetBrick.Core.Server
                             };
 
 
-                            var handler = CreateHandler();
+                            var handler = CreateHandler(peer);
 
                             peer.PeerHandler = handler;
                             handler.Peer = peer;
@@ -150,8 +143,7 @@ namespace NetBrick.Core.Server
                             if (peer == null)
                             {
                                 Log(LogLevel.Warn,
-                                    "A nonexistent peer of the endpoint {0} has tried sending disconnecting.",
-                                    message.SenderEndPoint);
+                                    $"A nonexistent peer of the endpoint {message.SenderEndPoint} has tried sending disconnecting.");
                                 message.SenderConnection.Disconnect("Nonexistent peer detected.");
                                 return;
                             }
@@ -172,7 +164,7 @@ namespace NetBrick.Core.Server
                     Log(LogLevel.Warn, message.ReadString());
                     break;
                 default:
-                    Log(LogLevel.Warn, "Unhandled lidgren message \"{0}\" received.", message.MessageType);
+                    Log(LogLevel.Warn, $"Unhandled lidgren message \"{message.MessageType}\" received.");
                     break;
             }
         }
@@ -240,7 +232,7 @@ namespace NetBrick.Core.Server
             _server.Connect(address, port);
         }
 
-        public abstract BasePeerHandler CreateHandler();
-        public abstract void Log(LogLevel level, string message, params object[] args);
+        public abstract BasePeerHandler CreateHandler(BrickPeer peer);
+        public abstract void Log(LogLevel level, string message);
     }
 }

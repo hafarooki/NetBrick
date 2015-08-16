@@ -16,8 +16,14 @@ namespace NetBrick.Core.Server
         private readonly Dictionary<short, PacketHandler> _responseHandlers;
         private readonly NetServer _server;
 
-        public virtual string RsaXml { get { throw new NotImplementedException("RsaXml not implemented on the server."); } }
-
+        /// <summary>
+        /// Constructor for BrickServer
+        /// </summary>
+        /// <param name="appIdentifier">The application identifier</param>
+        /// <param name="port">The port to listen on</param>
+        /// <param name="address">The address to listen on</param>
+        /// <param name="maxConnections">The maximum amount of connections</param>
+        /// <param name="runOnNewThread">Should the server run on a separate thread?</param>
         protected BrickServer(string appIdentifier, int port, string address, int maxConnections,
             bool runOnNewThread = true)
         {
@@ -41,35 +47,45 @@ namespace NetBrick.Core.Server
             _eventHandlers = new Dictionary<short, PacketHandler>();
             Peers = new Dictionary<IPEndPoint, BrickPeer>();
 
-            new Thread(() =>
-            {
-                while (!Environment.HasShutdownStarted) ;
-                foreach (var peer in Peers.Values)
-                {
-                    peer.Kick("Server shut down.");
-                }
-            }).Start();
-
             AddHandler(new EstablishEncryptionRequestHandler(this));
         }
 
+        /// <summary>
+        /// A list of address that are known servers
+        /// </summary>
         protected abstract List<IPEndPoint> ServerIpList { get; }
+
+        protected virtual int PacketsPerSecond { get { return 100; } }
+
+        /// <summary>
+        /// Connected peers
+        /// </summary>
         public Dictionary<IPEndPoint, BrickPeer> Peers { get; set; }
 
+        /// <summary>
+        /// Start the server
+        /// </summary>
         public void Start()
         {
             _server.Start();
         }
 
+        /// <summary>
+        /// Method for listening for messages
+        /// </summary>
         public void ListenLoop()
         {
             while (!Environment.HasShutdownStarted)
             {
                 Listen();
+                Thread.Sleep(1000 / PacketsPerSecond);
             }
         }
 
-        private void Listen()
+        /// <summary>
+        /// Listens for messages
+        /// </summary>
+        public void Listen()
         {
             var message = _server.ReadMessage();
 
@@ -169,6 +185,13 @@ namespace NetBrick.Core.Server
             }
         }
 
+        /// <summary>
+        /// Send a message to one peer
+        /// </summary>
+        /// <param name="packet">The packet to send</param>
+        /// <param name="recipient">The peer to send to</param>
+        /// <param name="method">The method of delivery</param>
+        /// <param name="sequenceChannel">The sequence channel to send it on</param>
         public void Send(Packet packet, BrickPeer recipient,
             NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered, int sequenceChannel = 0)
         {
@@ -177,6 +200,13 @@ namespace NetBrick.Core.Server
             _server.SendMessage(message, recipient.Connection, method, sequenceChannel);
         }
 
+        /// <summary>
+        /// Send a message to multiple peers
+        /// </summary>
+        /// <param name="packet">The packet to send</param>
+        /// <param name="recipients">The peers to send to</param>
+        /// <param name="method">The method of delivery</param>
+        /// <param name="sequenceChannel">The sequence channel to send it on</param>
         public void Send(Packet packet, IEnumerable<BrickPeer> recipients,
             NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered, int sequenceChannel = 0)
         {
@@ -188,6 +218,11 @@ namespace NetBrick.Core.Server
             _server.SendMessage(message, connections, method, sequenceChannel);
         }
 
+        /// <summary>
+        /// Senda  message to all peers
+        /// </summary>
+        /// <param name="packet">The packet to send</param>
+        /// <param name="method">The method of delivery</param>
         public void SendToAll(Packet packet, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
             var message = _server.CreateMessage();
@@ -195,6 +230,10 @@ namespace NetBrick.Core.Server
             _server.SendToAll(message, method);
         }
 
+        /// <summary>
+        /// Add a handler that handles packets
+        /// </summary>
+        /// <param name="handler">The handler to add</param>
         public void AddHandler(PacketHandler handler)
         {
             switch (handler.Type)
@@ -211,6 +250,10 @@ namespace NetBrick.Core.Server
             }
         }
 
+        /// <summary>
+        /// Remove a handler
+        /// </summary>
+        /// <param name="handler">The handler to remove</param>
         public void RemoveHandler(PacketHandler handler)
         {
             switch (handler.Type)
@@ -227,6 +270,11 @@ namespace NetBrick.Core.Server
             }
         }
 
+        /// <summary>
+        /// Connect to a server
+        /// </summary>
+        /// <param name="address">The address of the server</param>
+        /// <param name="port">The port of the server</param>
         public void ConnectToServer(string address, int port)
         {
             _server.Connect(address, port);

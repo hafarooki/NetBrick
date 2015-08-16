@@ -3,6 +3,7 @@
     public enum FrameworkParameterCode : byte
     {
         AesKey,
-        AesIV
+        AesIV,
+        PublicKey
     }
 }

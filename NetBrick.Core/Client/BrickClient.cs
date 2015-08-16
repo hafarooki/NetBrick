@@ -15,8 +15,7 @@ namespace NetBrick.Core.Client
         private readonly Dictionary<short, PacketHandler> _responseHandlers;
         public byte[] AesKey { get; set; }
         public byte[] AesIV { get; set; }
-
-        public virtual string RsaXml { get { throw new NotImplementedException("RsaXml not implemented on the client."); } }
+        internal RSAParameters PrivateKey { get; private set; }
 
         protected BrickClient(string appIdentifier)
         {
@@ -30,6 +29,8 @@ namespace NetBrick.Core.Client
             _requestHandlers = new Dictionary<short, PacketHandler>();
             _responseHandlers = new Dictionary<short, PacketHandler>();
             _eventHandlers = new Dictionary<short, PacketHandler>();
+
+            AddHandler(new EstablishEncryptionResponseHandler(this));
 
             _client.Start();
         }
@@ -65,7 +66,7 @@ namespace NetBrick.Core.Client
                 case NetIncomingMessageType.StatusChanged:
                     {
                         var status = (NetConnectionStatus)message.ReadByte();
-                        Log(LogLevel.Info, "Status Changed: {0}", status);
+                        Log(LogLevel.Info, $"Status Changed: {status}");
 
                         switch (status)
                         {
@@ -81,7 +82,7 @@ namespace NetBrick.Core.Client
             }
         }
 
-        public abstract void Log(LogLevel level, string message, params object[] args);
+        public abstract void Log(LogLevel level, string message);
         protected abstract void OnDisconnect(string reason);
         protected abstract void OnConnect();
 
@@ -134,23 +135,14 @@ namespace NetBrick.Core.Client
             _client.SendMessage(message, method, sequenceChannel);
         }
 
-        public void EstablishEncryption()
+        public void EstablishEncryption(int keySize = 2048)
         {
-            using (var rsa = new RSACryptoServiceProvider())
+            using (var rsa = new RSACryptoServiceProvider(keySize))
             {
-                rsa.FromXmlString(RsaXml);
-                using (var aes = Aes.Create())
-                {
-                    aes.GenerateKey();
-                    aes.GenerateIV();
-                    AesKey = aes.Key;
-                    AesIV = aes.IV;
-
-                    var packet = new Packet(PacketType.Request, (short)FrameworkOperationCode.EstablishEncryption);
-                    packet.Parameters[(byte)FrameworkParameterCode.AesKey] = rsa.Encrypt(AesKey, true);
-                    packet.Parameters[(byte)FrameworkParameterCode.AesIV] = rsa.Encrypt(AesIV, true);
-                    Send(packet);
-                }
+                PrivateKey = rsa.ExportParameters(true);
+                var packet = new Packet(PacketType.Request, (short)FrameworkOperationCode.EstablishEncryption);
+                packet.Parameters[(byte)FrameworkParameterCode.PublicKey] = rsa.ToXmlString(false);
+                Send(packet);
             }
         }
 

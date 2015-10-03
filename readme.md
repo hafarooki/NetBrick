@@ -6,12 +6,11 @@ NetBrick C# Networking Framework
 Todo list:
 ----------
 
-- [x] Make NetBrick.Core with basic messaging.
-- [ ] Make NetBrick.Physics with physics servers.
-- [x] Make NetBrick.Login with login servers.
-- [ ] Make NetBrick.ClientUpdater with a client updater that gets latest version of game from URL and can be integrated into a launcher.
-- [ ] Make NetBrick.Server with more advanced servers that have more functionality. (better integration with framework servers, zones/rooms etc., and more.)
-- [ ] Make NetBrick.Unity with some Unity3D specific code.
+- [x] Make basic messaging.
+- [x] Make encryption
+- [x] Make server to server communication
+- [ ] Make zone/room system
+- [ ] Make a more secure way to determine if a peer is a real server
 
 Getting Started
 ---------------

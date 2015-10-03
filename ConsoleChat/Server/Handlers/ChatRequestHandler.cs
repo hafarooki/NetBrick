@@ -8,6 +8,11 @@ namespace ConsoleChat.Server.Handlers
 {
     public class ChatRequestHandler : PacketHandler
     {
+        public ChatRequestHandler(BrickServer server) : base(server)
+        {
+
+        }
+
         public override short Code => (short)ChatOperationCode.Chat;
 
         public override PacketType Type => PacketType.Request;

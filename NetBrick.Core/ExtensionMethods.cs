@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
+using System.Runtime.Serialization.Formatters.Binary;
+using System;
 
 namespace NetBrick.Core
 {
@@ -20,25 +21,35 @@ namespace NetBrick.Core
         {
             using (var ms = new MemoryStream())
             {
-                using (var writer = new BsonWriter(ms))
-                {
-                    var serializer = new JsonSerializer();
-                    serializer.Serialize(writer, value);
-                    return ms.ToArray();
-                }
+                //using (var writer = new BsonWriter(ms))
+                //{
+                //    var serializer = new JsonSerializer();
+                //    serializer.Serialize(writer, value);
+                //    return ms.ToArray();
+                //}
+                var bf = new BinaryFormatter();
+                bf.Serialize(ms, value);
+                return ms.ToArray();
             }
         }
 
-        public static T FromBytes<T>(this byte[] value, bool array = false)
+        [Obsolete("No longer necessary to have array bool", false)]
+        public static T FromBytes<T>(this byte[] value, bool array)
+        {
+            return FromBytes<T>(value);
+        }
+
+        public static T FromBytes<T>(this byte[] value)
         {
             using (var ms = new MemoryStream(value))
             {
-                using (var reader = new BsonReader(ms))
-                {
-                    var serializer = new JsonSerializer();
-                    reader.ReadRootValueAsArray = array;
-                    return serializer.Deserialize<T>(reader);
-                }
+                //using (var reader = new BsonReader(ms))
+                //{
+                //    var serializer = new JsonSerializer();
+                //    return serializer.Deserialize<T>(reader);
+                //}
+                var bf = new BinaryFormatter();
+                return (T)bf.Deserialize(ms);
             }
         }
     }

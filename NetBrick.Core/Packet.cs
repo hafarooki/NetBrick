@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Lidgren.Network;
+using System;
 
 namespace NetBrick.Core
 {
@@ -54,6 +55,7 @@ namespace NetBrick.Core
             return buffer;
         }
 
+        [Serializable]
         private class PacketParameter
         {
             public PacketParameter(byte code, object data)

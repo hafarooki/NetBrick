@@ -11,12 +11,12 @@ namespace ConsoleChat.Server
         public override void OnConnect(IPEndPoint endPoint)
         {
             EndPoint = endPoint;
-            ChatServer.Instance.Log(LogLevel.Info, "User {0} connected.", EndPoint);
+            ChatServer.Instance.Log(LogLevel.Info, $"User {EndPoint} connected.");
         }
 
         public override void OnDisconnect(string reason)
         {
-            ChatServer.Instance.Log(LogLevel.Info, "User {0} has disconnected.", EndPoint);
+            ChatServer.Instance.Log(LogLevel.Info, $"User {EndPoint} has disconnected.");
         }
     }
 }

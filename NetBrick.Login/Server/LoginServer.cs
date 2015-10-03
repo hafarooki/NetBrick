@@ -6,7 +6,7 @@ using System.Text;
 using DevOne.Security.Cryptography.BCrypt;
 using NetBrick.Core;
 using NetBrick.Core.Server;
-using StackExchange.Redis;
+using System.Data.SQLite;
 
 namespace NetBrick.Login.Server
 {
@@ -14,74 +14,15 @@ namespace NetBrick.Login.Server
     {
         protected abstract string Prefix { get; }
 
-        protected LoginServer(string appIdentifier, int port, string address,
+        protected LoginServer(string connectionString, string appIdentifier, int port, string address,
             int maxConnections, bool runOnNewThread = true)
             : base(appIdentifier, port, address, maxConnections, runOnNewThread)
         {
+            Connection = new SQLiteConnection(connectionString);
         }
 
-        public IDatabase Database { get; set; }
+        public SQLiteConnection Connection { get; }
 
-        public void SetStringData(string key, string value)
-        {
-            Database.StringSet(key, value);
-        }
-
-        public string GetStringData(string key)
-        {
-            return Database.StringGet(key);
-        }
-
-        public void SetBinaryData(string key, byte[] bytes)
-        {
-            Database.StringSet(key, bytes);
-        }
-
-        public byte[] GetBinaryData(string key)
-        {
-            return Database.StringGet(key);
-        }
-
-        public bool DataExists(string key)
-        {
-            return Database.KeyExists(key);
-        }
-
-        public void DeleteData(string key)
-        {
-            Database.KeyDelete(key);
-        }
-
-        public void RegisterUser(TAccountType account)
-        {
-            SetBinaryData($"{Prefix}:Accounts:{account.Username}", account.ToBytes());
-        }
-
-        public TAccountType RetrieveUser(string username)
-        {
-            return GetBinaryData($"{Prefix}:Accounts:{username}").FromBytes<TAccountType>();
-        }
-
-        public void DeleteUser(string username)
-        {
-            DeleteData($"{Prefix}:Accounts:{username}");
-        }
-
-        public bool CheckCredentials(string username, string password)
-        {
-            var user = RetrieveUser(username);
-            return BCryptHelper.CheckPassword(password, user.Password);
-        }
-
-        public bool UserExists(string username)
-        {
-            return DataExists($"{Prefix}:Accounts:{username}");
-        }
-
-        public void UpdateUser(TAccountType account)
-        {
-            account.Updated = DateTime.Now;
-            SetBinaryData($"{Prefix}:Accounts:{account.Username}", account.ToBytes());
-        }
+        public bool UserExists()
     }
 }

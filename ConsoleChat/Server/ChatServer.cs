@@ -11,7 +11,7 @@ namespace ConsoleChat.Server
     {
         private static ChatServer _instance;
 
-        public ChatServer() : base("ConsoleChat", 25000, IPAddress.Any.ToString(), 10)
+        public ChatServer() : base("ConsoleChat", 25000, "127.0.0.1", 10)
         {
             RegisterHandlers();
         }
@@ -19,19 +19,19 @@ namespace ConsoleChat.Server
         public static ChatServer Instance => _instance ?? (_instance = new ChatServer());
         protected override List<IPEndPoint> ServerIpList => new List<IPEndPoint>();
 
-        public override BasePeerHandler CreateHandler()
+        public override BasePeerHandler CreateHandler(BrickPeer peer)
         {
             return new ChatPeerHandler();
         }
 
-        public override void Log(LogLevel level, string message, params object[] args)
+        public override void Log(LogLevel level, string message)
         {
-            Console.WriteLine($"{DateTime.Now} [{level}] {message}", args);
+            Console.WriteLine($"{DateTime.Now} [{level}] {message}"); 
         }
 
         public void RegisterHandlers()
         {
-            AddHandler(new ChatRequestHandler());
+            AddHandler(new ChatRequestHandler(this));
         }
     }
 }

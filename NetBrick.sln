@@ -1,20 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.22823.1
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetBrick.Core", "NetBrick.Core\NetBrick.Core.csproj", "{064F66F2-3F47-4551-A1D2-929440DCC2E1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lidgren.Network", "Lidgren.Network\Lidgren.Network.csproj", "{49BA1C69-6104-41AC-A5D8-B54FA9F696E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetBrick.Login", "NetBrick.Login\NetBrick.Login.csproj", "{031DE31E-0832-4C94-A23B-B72A368122F2}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7CEA699B-57B9-4206-A933-BD4312F5670D}"
 	ProjectSection(SolutionItems) = preProject
 		readme.md = readme.md
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetBrick.Physics", "NetBrick.Physics\NetBrick.Physics.csproj", "{3CE2B8BE-D508-4522-8C60-99435C0F524D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{0CF60A9A-89BF-4D5A-971D-75C993AC1125}"
 EndProject
@@ -34,14 +30,6 @@ Global
 		{49BA1C69-6104-41AC-A5D8-B54FA9F696E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49BA1C69-6104-41AC-A5D8-B54FA9F696E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{49BA1C69-6104-41AC-A5D8-B54FA9F696E8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{031DE31E-0832-4C94-A23B-B72A368122F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{031DE31E-0832-4C94-A23B-B72A368122F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{031DE31E-0832-4C94-A23B-B72A368122F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{031DE31E-0832-4C94-A23B-B72A368122F2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3CE2B8BE-D508-4522-8C60-99435C0F524D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3CE2B8BE-D508-4522-8C60-99435C0F524D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3CE2B8BE-D508-4522-8C60-99435C0F524D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3CE2B8BE-D508-4522-8C60-99435C0F524D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{00CA398D-269C-435C-B0DD-A69E09E9EED7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{00CA398D-269C-435C-B0DD-A69E09E9EED7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{00CA398D-269C-435C-B0DD-A69E09E9EED7}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
